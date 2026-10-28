@@ -16,7 +16,7 @@ Las reglas generales de la agencia están en el repositorio `dpalvaro/impulsadt-
 - Todo lo que cambia (teléfonos, WhatsApp, horario, campaña, productos, precios y datos legales) está en `web/datos.js`. No lo cambies sin una fuente: la ficha de Loli o una decisión de Álvaro.
 - WhatsApp de pedidos: 635 54 37 63 (está en el rótulo de la tienda).
 - Los días de campaña que ya han pasado no se ofrecen, y la franja de campaña se oculta sola cuando no queda ninguno.
-- Datos legales del titular (nombre o razón social, NIF y correo): pendientes. Mientras falten, el aviso legal no muestra esas líneas.
+- Datos legales del titular (nombre, NIF y correo) en `web/datos.js` desde el 28/10/2026; los dio Álvaro. Si alguno se deja vacío, el aviso legal no muestra esa línea.
 
 ## Fotos y vídeos
 

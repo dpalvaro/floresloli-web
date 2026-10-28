@@ -57,8 +57,8 @@ window.FLORISTERIA = {
   modelos: ["modelo-1", "modelo-2", "modelo-3", "modelo-4", "modelo-5", "modelo-6", "modelo-7", "modelo-8"],
 
   legal: {
-    titular: "⚠ PENDIENTE: nombre y apellidos o razón social",
-    nif: "⚠ PENDIENTE",
-    email: "⚠ PENDIENTE",
+    titular: "Maria Francisca García López",
+    nif: "03863364P",
+    email: "floreslolitoledo@gmail.com",
   },
 };
