@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aviso legal y privacidad · Flores y Plantas Loli</title><meta name="robots" content="noindex">
+<style>body{margin:0;background:#F5F7F3;color:#17221D;font:18px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:720px;margin:0 auto;padding:40px 20px}h1{font-family:Georgia,serif;font-weight:400;font-size:2.2rem;line-height:1.1}h2{font-size:1.15rem;margin-top:2em}a{color:#1F4A3A}</style></head>
+<body><main>
+<p><a href="index.html">Volver a la web</a></p>
+<h1>Aviso legal y privacidad</h1>
+<h2>Titular de la web</h2>
+<p><span data-fila>Titular: <span data-legal="titular"></span><br></span><span data-fila>NIF: <span data-legal="nif"></span><br></span>Domicilio: <span id="dom"></span><br>Teléfono: <span id="tel"></span><span data-fila><br>Correo electrónico: <span data-legal="email"></span></span></p>
+<h2>Cómo funcionan los encargos</h2>
+<p>Esta web no cobra ni guarda datos. Al pulsar «Enviar encargo por WhatsApp» se abre WhatsApp en tu dispositivo con el mensaje escrito; el encargo solo se envía si tú lo mandas. El precio y la disponibilidad se confirman por WhatsApp o por teléfono antes de preparar el pedido.</p>
+<h2>Protección de datos</h2>
+<p>Los datos que nos envíes por WhatsApp o por teléfono (nombre, dirección de entrega, datos del destinatario y dedicatoria) se usan solo para preparar y entregar tu encargo, sobre la base de la relación contractual. Se conservan el tiempo necesario para ello y para cumplir obligaciones fiscales. No se ceden a terceros salvo obligación legal. Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad con los datos de contacto indicados arriba, y reclamar ante la Agencia Española de Protección de Datos (aepd.es). Al usar WhatsApp se aplican también las condiciones de WhatsApp (Meta).</p>
+<h2>Cookies</h2>
+<p>Esta web no usa cookies propias ni de terceros ni herramientas de analítica.</p>
+<h2>Productos perecederos</h2>
+<p>Las flores y plantas son bienes perecederos, por lo que no se aplica el derecho de desistimiento (art. 103 d del Real Decreto Legislativo 1/2007). Si hay cualquier problema con tu encargo, llámanos y lo solucionamos.</p>
+</main>
+<script src="datos.js"></script>
+<script>const D=window.FLORISTERIA;/* Un dato que falta (vacío o que empieza por ⚠) no se muestra: se completa en datos.js */document.querySelectorAll('[data-legal]').forEach(e=>{const v=(D.legal[e.dataset.legal]||'').trim();if(!v||v.startsWith('⚠'))e.closest('[data-fila]').hidden=true;else e.textContent=v;});document.getElementById('dom').textContent=`${D.direccion}, ${D.cp} ${D.ciudad}`;document.getElementById('tel').textContent=D.telefono;</script>
+</body></html>
