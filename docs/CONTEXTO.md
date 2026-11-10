@@ -154,7 +154,7 @@ npm run local          # compila y arranca todo (web + API + base de datos local
 npm run dev            # solo la web, con recarga al guardar, en http://localhost:4321 (la API, con `npm run api` en otra terminal)
 
 npm test               # pruebas de las reglas de la tienda
-npm run tipos          # comprobación de tipos de la web (para la API: npx tsc --noEmit -p functions/tsconfig.json)
+npm run tipos          # comprobación de tipos de la web y de la API
 npm run comprobar      # lista de pendientes y coherencia; regenera docs/PENDIENTES.md
 npm run prueba:compra  # compra completa contra la tienda en local (con `npm run local` en marcha)
 npm run imagenes       # rehace los iconos y la imagen de compartir

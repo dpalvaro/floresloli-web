@@ -16,7 +16,7 @@
     "comprobar": "node --experimental-strip-types herramientas/comprobar.mjs",
     "test": "node --experimental-strip-types --test \"pruebas/*.test.ts\"",
     "prueba:compra": "node --experimental-strip-types herramientas/prueba-compra.mjs",
-    "tipos": "tsc --noEmit",
+    "tipos": "tsc --noEmit && tsc --noEmit -p functions/tsconfig.json",
     "imagenes": "node --experimental-strip-types herramientas/imagenes-sociales.mjs"
   },
   "devDependencies": {

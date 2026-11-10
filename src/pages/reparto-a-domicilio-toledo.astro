@@ -76,7 +76,7 @@ const migas = [
           <tbody>
             <tr>
               <th scope="row">Recoger en la tienda ({NEGOCIO.direccion.calle})</th>
-              <td>Gratis</td>
+              <td data-etiqueta="Precio">Gratis</td>
             </tr>
             {
               zonas.map((z) => (
@@ -84,7 +84,7 @@ const migas = [
                   <th scope="row">
                     {z.nombre} (códigos postales {z.cps[0]} a {z.cps[z.cps.length - 1]})
                   </th>
-                  <td>{z.precio != null ? euros(z.precio) : 'Pregúntanos'}</td>
+                  <td data-etiqueta="Precio">{z.precio != null ? euros(z.precio) : 'Pregúntanos'}</td>
                 </tr>
               ))
             }
@@ -92,11 +92,11 @@ const migas = [
               <th scope="row">
                 <a href={RUTA_HOSPITAL}>Hospital Universitario de Toledo</a>
               </th>
-              <td>{euros(TIENDA.entrega.hospital.precio)}</td>
+              <td data-etiqueta="Precio">{euros(TIENDA.entrega.hospital.precio)}</td>
             </tr>
             <tr>
               <th scope="row">Pueblos cercanos (Layos, Cabañas…)</th>
-              <td>Según la distancia: pregúntanos</td>
+              <td data-etiqueta="Precio">Según la distancia: pregúntanos</td>
             </tr>
           </tbody>
         </table>

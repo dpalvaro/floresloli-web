@@ -6,6 +6,6 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["astro/client"]
   },
-  "include": ["src/**/*.ts", "compartido/**/*.ts", "pruebas/**/*.ts", "src/env.d.ts"],
-  "exclude": ["dist", "node_modules", "functions"]
+  "include": ["src/**/*.ts", "compartido/**/*.ts", "src/env.d.ts"],
+  "exclude": ["dist", "node_modules", "functions", "pruebas", "herramientas"]
 }
