@@ -1,0 +1,65 @@
+---
+import PaginaLegal from '../components/PaginaLegal.astro';
+import { NEGOCIO } from '../../compartido/negocio.ts';
+---
+
+<PaginaLegal titulo="Política de cookies" descripcion={`Qué guarda la web de ${NEGOCIO.nombre} en tu navegador: solo lo necesario para la cesta y el pedido. Sin publicidad ni analítica.`} actualizado="10 de noviembre de 2026">
+  <h2>En pocas palabras</h2>
+  <p>
+    Esta web <strong>no usa cookies de publicidad ni de analítica</strong>, ni propias ni de terceros. No te seguimos ni compartimos tu navegación
+    con nadie. Por eso no ves un aviso de cookies al entrar: solo se guarda lo imprescindible para que la tienda funcione.
+  </p>
+
+  <h2>Qué se guarda en tu navegador</h2>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Nombre</th>
+        <th scope="col">Para qué sirve</th>
+        <th scope="col">Cuánto dura</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td data-etiqueta="Nombre">floresloli.cesta.v1 (almacenamiento local)</td>
+        <td data-etiqueta="Para qué sirve">Recordar los productos de tu cesta mientras eliges. No sale de tu dispositivo.</td>
+        <td data-etiqueta="Cuánto dura">Hasta que haces el pedido, vacías la cesta o borras los datos del navegador.</td>
+      </tr>
+      <tr>
+        <td data-etiqueta="Nombre">floresloli.pedido.v1 (almacenamiento de sesión)</td>
+        <td data-etiqueta="Para qué sirve">No perder lo que has escrito en el formulario del pedido si vuelves atrás desde la página de pago.</td>
+        <td data-etiqueta="Cuánto dura">Hasta que cierras la pestaña o terminas el pedido.</td>
+      </tr>
+      <tr>
+        <td data-etiqueta="Nombre">panel_sesion (cookie)</td>
+        <td data-etiqueta="Para qué sirve">Mantener la sesión del personal de la tienda en el panel de pedidos. Los clientes no la reciben.</td>
+        <td data-etiqueta="Cuánto dura">12 horas.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    Son elementos técnicos, necesarios para prestar el servicio que pides. La normativa (artículo 22.2 de la Ley 34/2002) no exige pedir
+    consentimiento para ellos.
+  </p>
+
+  <h2>Al pagar</h2>
+  <p>
+    El pago se hace en una página de Stripe, la pasarela de pago. Stripe usa sus propias cookies, necesarias para procesar el pago y evitar el
+    fraude. Puedes consultarlas en la <a href="https://stripe.com/es/legal/cookies-policy" rel="noopener">política de cookies de Stripe</a>.
+  </p>
+
+  <h2>Enlaces a otros servicios</h2>
+  <p>
+    Los botones de WhatsApp y de Google Maps son simples enlaces: esos servicios no reciben nada hasta que pulsas y sales de esta web. A partir de
+    ahí se aplican sus propias políticas.
+  </p>
+
+  <h2>Cómo borrar lo guardado</h2>
+  <p>
+    Puedes vaciar la cesta desde la propia web o borrar los datos de navegación desde los ajustes de tu navegador (en «Privacidad» o «Historial»).
+    La web seguirá funcionando; solo tendrás que volver a llenar la cesta.
+  </p>
+
+  <h2>Cambios</h2>
+  <p>Si algún día se añade una herramienta que use cookies no necesarias, se actualizará esta página y se pedirá tu permiso antes de activarla.</p>
+</PaginaLegal>

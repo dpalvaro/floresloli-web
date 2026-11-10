@@ -1,0 +1,384 @@
+---
+/*
+ * PANEL DE PEDIDOS (el «libro de pedidos» de la tienda)
+ *
+ * Una sola página, protegida con clave. Todo lo que enseña lo pide a /api/panel/…,
+ * que es quien comprueba la sesión: esta página, sin clave, no contiene ningún dato.
+ * La lógica está en src/scripts/panel.ts.
+ */
+import Base from '../layouts/Base.astro';
+import { catalogoCompra } from '../../compartido/catalogo.ts';
+import { NEGOCIO } from '../../compartido/negocio.ts';
+import { ESTADOS_MANUALES, nombreEstado } from '../../compartido/pedido.ts';
+import { METODOS_ENTREGA, TIENDA, nombreMetodo } from '../../compartido/tienda.ts';
+import { ENTORNO } from '../lib/entorno.ts';
+
+/* Nombres y precios para rellenar más deprisa un pedido apuntado a mano. Sin precios sin confirmar. */
+const datos = {
+  productos: catalogoCompra(ENTORNO).flatMap((p) =>
+    p.variantes.length
+      ? p.variantes.map((v) => ({ nombre: `${p.nombre} (${v.nombre})`, precio: v.precio, iva: p.iva }))
+      : [{ nombre: p.nombre, precio: p.aMedida ? null : p.precio, iva: p.iva }],
+  ),
+  estados: ESTADOS_MANUALES.map((id) => ({ id, nombre: nombreEstado(id) })),
+  envioToledo: TIENDA.entrega.domicilio.zonas[0]?.precio ?? 0,
+  envioHospital: TIENDA.entrega.hospital.precio,
+};
+const aTexto = (dato: unknown) => JSON.stringify(dato).replace(/</g, '\\u003c');
+---
+
+<Base titulo="Panel de pedidos" descripcion={`Panel interno de ${NEGOCIO.nombre}.`} noindex simple>
+  <div class="envoltura panel" data-panel>
+    <p data-cargando role="status">Cargando…</p>
+
+    <noscript><p class="aviso">El panel necesita JavaScript.</p></noscript>
+
+    <section class="entrada-panel" data-entrada hidden>
+      <h1>Panel de pedidos</h1>
+      <form data-form-entrada novalidate>
+        <div class="campo">
+          <label for="clave">Clave</label>
+          <input id="clave" name="clave" type="password" autocomplete="current-password" required />
+          <p class="error" data-error-entrada role="alert" hidden></p>
+        </div>
+        <button class="boton grande ancho" type="submit">Entrar</button>
+      </form>
+      <p class="aviso ambar" data-sin-configurar hidden>
+        El panel todavía no tiene clave. Hay que poner las variables <code>PANEL_CLAVE</code> y <code>SECRETO_SESION</code> en Cloudflare
+        (pasos en <code>docs/PUESTA-EN-MARCHA.md</code>).
+      </p>
+      <p class="aviso ambar" data-sin-base hidden>
+        Falta la base de datos: hay que crear la base D1 y enlazarla con el nombre <code>DB</code> (pasos en <code>docs/PUESTA-EN-MARCHA.md</code>).
+      </p>
+    </section>
+
+    <div data-dentro hidden>
+      <header class="cabeza no-imprimir">
+        <h1>Pedidos</h1>
+        <span class="etiqueta ambar" data-entorno hidden>Vista de pruebas</span>
+        <div class="cabeza-acciones">
+          <button class="boton linea pequeno" type="button" data-actualizar>Actualizar</button>
+          <button class="boton linea pequeno" type="button" data-salir>Salir</button>
+        </div>
+      </header>
+
+      <div class="pestanas no-imprimir" role="tablist" aria-label="Secciones del panel">
+        <button type="button" role="tab" id="p-pedidos" aria-controls="s-pedidos" aria-selected="true" data-ir="pedidos">Pedidos <span class="globo" data-globo-pedidos hidden></span></button>
+        <button type="button" role="tab" id="p-apuntar" aria-controls="s-apuntar" aria-selected="false" data-ir="apuntar">Apuntar pedido</button>
+        <button type="button" role="tab" id="p-calendario" aria-controls="s-calendario" aria-selected="false" data-ir="calendario">Calendario</button>
+        <button type="button" role="tab" id="p-presupuestos" aria-controls="s-presupuestos" aria-selected="false" data-ir="presupuestos">Presupuestos <span class="globo" data-globo-presupuestos hidden></span></button>
+        <button type="button" role="tab" id="p-ajustes" aria-controls="s-ajustes" aria-selected="false" data-ir="ajustes">Ajustes</button>
+      </div>
+
+      <p class="aviso error no-imprimir" data-fallo-panel role="alert" hidden></p>
+
+      <section id="s-pedidos" role="tabpanel" aria-labelledby="p-pedidos" data-seccion="pedidos" class="no-imprimir">
+        <ul class="cifras" data-cifras aria-label="Resumen"></ul>
+        <div class="filtros">
+          <div class="vistas" role="group" aria-label="Qué pedidos se ven">
+            <button type="button" data-vista="marcha" aria-pressed="true">Por hacer</button>
+            <button type="button" data-vista="hoy" aria-pressed="false">Hoy</button>
+            <button type="button" data-vista="proximos" aria-pressed="false">Próximos días</button>
+            <button type="button" data-vista="todos" aria-pressed="false">Todos</button>
+          </div>
+          <div class="buscar">
+            <label class="solo-lectores" for="buscar">Buscar por nombre, teléfono o número de pedido</label>
+            <input id="buscar" type="search" placeholder="Buscar nombre, teléfono o n.º de pedido" data-buscar />
+          </div>
+        </div>
+        <div data-lista-pedidos aria-live="polite"></div>
+      </section>
+
+      <section id="s-apuntar" role="tabpanel" aria-labelledby="p-apuntar" data-seccion="apuntar" class="no-imprimir" hidden>
+        <h2>Apuntar un pedido</h2>
+        <p class="ayuda-seccion">Para los pedidos del mostrador, del teléfono y de WhatsApp. Así están todos en el mismo sitio.</p>
+        <form class="apuntar" data-form-apuntar novalidate>
+          <fieldset class="campo">
+            <legend>¿Por dónde ha llegado?</legend>
+            <div class="en-linea">
+              <label class="casilla"><input type="radio" name="origen" value="tienda" checked /> <span>Mostrador</span></label>
+              <label class="casilla"><input type="radio" name="origen" value="telefono" /> <span>Teléfono</span></label>
+              <label class="casilla"><input type="radio" name="origen" value="whatsapp" /> <span>WhatsApp</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="campo">
+            <legend>Qué lleva</legend>
+            <div data-lineas-manual></div>
+            <button type="button" class="enlace-boton" data-otra-linea>+ Añadir otro producto</button>
+            <p class="error" data-error-de="lineas" role="alert" hidden></p>
+            <datalist id="productos-catalogo"></datalist>
+          </fieldset>
+
+          <div class="fila-campos">
+            <div class="campo">
+              <label for="m-metodo">Entrega</label>
+              <select id="m-metodo" name="metodo">
+                {METODOS_ENTREGA.map((m) => <option value={m}>{nombreMetodo(m)}</option>)}
+              </select>
+            </div>
+            <div class="campo">
+              <label for="m-fecha">Día de entrega</label>
+              <input id="m-fecha" name="fecha" type="date" required />
+              <p class="error" data-error-de="entrega.fecha" role="alert" hidden></p>
+            </div>
+          </div>
+
+          <div data-manual-reparto hidden>
+            <div class="fila-campos">
+              <div class="campo">
+                <label for="m-dest">Para quién</label>
+                <input id="m-dest" name="destNombre" type="text" maxlength="80" autocomplete="off" />
+              </div>
+              <div class="campo">
+                <label for="m-dest-tel">Teléfono de quien lo recibe <span class="opcional">(opcional)</span></label>
+                <input id="m-dest-tel" name="destTelefono" type="tel" maxlength="25" autocomplete="off" />
+                <p class="error" data-error-de="destinatario.telefono" role="alert" hidden></p>
+              </div>
+            </div>
+            <div data-manual-domicilio>
+              <div class="campo">
+                <label for="m-calle">Dirección</label>
+                <input id="m-calle" name="calle" type="text" maxlength="140" autocomplete="off" />
+                <p class="error" data-error-de="direccion.calle" role="alert" hidden></p>
+              </div>
+              <div class="fila-campos cp">
+                <div class="campo">
+                  <label for="m-cp">Código postal</label>
+                  <input id="m-cp" name="cp" type="text" inputmode="numeric" maxlength="5" autocomplete="off" />
+                  <p class="error" data-error-de="direccion.cp" role="alert" hidden></p>
+                </div>
+                <div class="campo">
+                  <label for="m-localidad">Localidad</label>
+                  <input id="m-localidad" name="localidad" type="text" maxlength="60" autocomplete="off" />
+                </div>
+              </div>
+            </div>
+            <div class="campo" data-manual-hospital hidden>
+              <label for="m-hospital">Planta y habitación <span class="opcional">(si se saben)</span></label>
+              <input id="m-hospital" name="hospDetalle" type="text" maxlength="120" autocomplete="off" />
+            </div>
+            <div class="fila-campos">
+              <div class="campo">
+                <label for="m-envio">Precio del reparto (€)</label>
+                <input id="m-envio" name="envio" type="text" inputmode="decimal" autocomplete="off" />
+                <p class="error" data-error-de="envio" role="alert" hidden></p>
+              </div>
+              <div class="campo">
+                <label for="m-nota-entrega">Indicaciones de entrega <span class="opcional">(opcional)</span></label>
+                <input id="m-nota-entrega" name="entregaNota" type="text" maxlength="120" autocomplete="off" />
+              </div>
+            </div>
+          </div>
+
+          <div class="campo">
+            <label for="m-dedicatoria">Dedicatoria de la tarjeta <span class="opcional">(opcional)</span></label>
+            <textarea id="m-dedicatoria" name="dedicatoria" rows="2" maxlength={TIENDA.limites.dedicatoria}></textarea>
+          </div>
+
+          <div class="fila-campos">
+            <div class="campo">
+              <label for="m-nombre">Quién lo encarga</label>
+              <input id="m-nombre" name="nombre" type="text" maxlength="80" autocomplete="off" required />
+              <p class="error" data-error-de="comprador.nombre" role="alert" hidden></p>
+            </div>
+            <div class="campo">
+              <label for="m-telefono">Su teléfono <span class="opcional">(opcional)</span></label>
+              <input id="m-telefono" name="telefono" type="tel" maxlength="25" autocomplete="off" />
+              <p class="error" data-error-de="comprador.telefono" role="alert" hidden></p>
+            </div>
+          </div>
+
+          <div class="fila-campos">
+            <div class="campo">
+              <label for="m-cobro">Cobro</label>
+              <select id="m-cobro" name="cobro">
+                <option value="">Sin cobrar todavía</option>
+                <option value="efectivo">Cobrado en efectivo</option>
+                <option value="tarjeta">Cobrado con tarjeta (datáfono)</option>
+                <option value="bizum">Cobrado por Bizum</option>
+                <option value="transferencia">Cobrado por transferencia</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label for="m-nota">Nota para la tienda <span class="opcional">(opcional)</span></label>
+              <input id="m-nota" name="notaInterna" type="text" maxlength="500" autocomplete="off" />
+            </div>
+          </div>
+
+          <p class="total-manual">Total: <strong data-total-manual>0,00 €</strong></p>
+          <p class="aviso error" data-fallo-apuntar role="alert" hidden></p>
+          <button class="boton grande" type="submit">Apuntar el pedido</button>
+        </form>
+      </section>
+
+      <section id="s-calendario" role="tabpanel" aria-labelledby="p-calendario" data-seccion="calendario" class="no-imprimir" hidden>
+        <h2>Calendario</h2>
+        <p class="ayuda-seccion" data-ayuda-calendario></p>
+        <div data-lista-dias></div>
+      </section>
+
+      <section id="s-presupuestos" role="tabpanel" aria-labelledby="p-presupuestos" data-seccion="presupuestos" class="no-imprimir" hidden>
+        <h2>Presupuestos</h2>
+        <p class="ayuda-seccion">Solicitudes de bodas, comuniones, eventos y empresas que llegan desde la web.</p>
+        <div data-lista-presupuestos></div>
+      </section>
+
+      <section id="s-ajustes" role="tabpanel" aria-labelledby="p-ajustes" data-seccion="ajustes" class="no-imprimir" hidden>
+        <h2>Exportar pedidos</h2>
+        <p class="ayuda-seccion">Descarga los pedidos en un archivo que abre Excel, con los importes y el IVA desglosado. Para el gestor.</p>
+        <form class="exportar" data-form-exportar>
+          <div class="campo">
+            <label for="e-desde">Desde</label>
+            <input id="e-desde" name="desde" type="date" required />
+          </div>
+          <div class="campo">
+            <label for="e-hasta">Hasta</label>
+            <input id="e-hasta" name="hasta" type="date" required />
+          </div>
+          <div class="campo">
+            <label for="e-por">Según</label>
+            <select id="e-por" name="por">
+              <option value="entrega">El día de entrega</option>
+              <option value="pedido">El día del pedido</option>
+            </select>
+          </div>
+          <button class="boton" type="submit">Descargar</button>
+        </form>
+
+        <h2>Cómo está la tienda</h2>
+        <div data-estado-tienda></div>
+      </section>
+    </div>
+  </div>
+
+  <dialog class="ficha" data-ficha aria-labelledby="t-ficha">
+    <div data-ficha-contenido></div>
+  </dialog>
+
+  <div class="hoja" data-hoja aria-hidden="true"></div>
+
+  <script type="application/json" id="datos-panel" is:inline set:html={aTexto(datos)} />
+  <script>
+    import '../scripts/panel.ts';
+  </script>
+</Base>
+
+<style is:global>
+  .panel { padding-block: clamp(20px, 4vw, 40px) var(--hueco-seccion); }
+  .panel h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); }
+  .panel h2 { font-size: clamp(1.4rem, 3.4vw, 1.75rem); margin: 1.4em 0 0.4em; }
+  .panel [data-seccion] > h2:first-child { margin-top: 0.6em; }
+  .panel code { font-size: 0.9em; background: var(--violeta-claro); padding: 1px 5px; border-radius: 4px; }
+  .ayuda-seccion { color: var(--gris); max-width: 68ch; margin-bottom: 18px; }
+
+  .entrada-panel { max-width: 420px; margin: clamp(24px, 8vw, 80px) auto 0; }
+  .entrada-panel h1 { margin-bottom: 0.7em; }
+  .entrada-panel .aviso { margin-top: 18px; }
+
+  .cabeza { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 16px; }
+  .cabeza-acciones { margin-left: auto; display: flex; gap: 8px; }
+
+  .pestanas { display: flex; gap: 4px; overflow-x: auto; border-bottom: 2px solid var(--linea); margin: 0 calc(-1 * var(--margen)) 20px; padding: 0 var(--margen); scrollbar-width: thin; }
+  .pestanas button {
+    flex: none; min-height: 48px; padding: 0 14px; border: 0; background: none; cursor: pointer;
+    font: 600 1rem/1 var(--sans); color: var(--gris); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap;
+  }
+  .pestanas button:hover { color: var(--violeta-osc); }
+  .pestanas button[aria-selected='true'] { color: var(--violeta-osc); border-bottom-color: var(--violeta); }
+  .globo { display: inline-block; min-width: 22px; padding: 0 6px; margin-left: 4px; border-radius: 999px; background: var(--violeta); color: #fff; font: 600 0.8rem/22px var(--sans); text-align: center; }
+
+  .cifras { list-style: none; margin: 0 0 18px; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .cifras li { margin: 0; padding: 12px 14px; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); }
+  .cifras .numero { display: block; font: 400 1.9rem/1 var(--serif); color: var(--violeta-osc); }
+  .cifras .rotulo { font-size: 0.88rem; color: var(--gris); }
+  .cifras li[data-alerta='si'] { background: #fff4d1; border-color: #e3c25a; }
+  @media (min-width: 720px) { .cifras { grid-template-columns: repeat(4, 1fr); } }
+
+  .filtros { display: grid; gap: 12px; margin-bottom: 18px; }
+  .vistas { display: flex; flex-wrap: wrap; gap: 6px; }
+  .vistas button {
+    min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid var(--linea); background: var(--blanco);
+    font: 600 0.95rem/1 var(--sans); color: var(--violeta-osc); cursor: pointer;
+  }
+  .vistas button[aria-pressed='true'] { background: var(--violeta-osc); border-color: var(--violeta-osc); color: #fff; }
+  @media (min-width: 900px) { .filtros { grid-template-columns: 1fr 320px; align-items: center; } }
+
+  .grupo-dia { font: 600 1rem/1.3 var(--sans); letter-spacing: 0; color: var(--violeta-osc); margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--linea); }
+  .grupo-dia:first-child { margin-top: 0; }
+  .sin-pedidos { color: var(--gris); padding: 28px 0; }
+
+  .pedido-tarjeta { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 16px; margin-bottom: 12px; }
+  .pedido-tarjeta[data-estado='nuevo'] { border-left: 5px solid var(--violeta); }
+  .pedido-tarjeta[data-estado='cancelado'], .pedido-tarjeta[data-estado='caducado'] { opacity: 0.75; }
+  .pedido-cabeza { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 10px; }
+  .pedido-ref { font: 600 1rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.03em; }
+  .pedido-total { margin-left: auto; font-weight: 600; white-space: nowrap; }
+  .pedido-entrega { font-weight: 600; color: var(--violeta-osc); margin-bottom: 8px; }
+  .pedido-lineas { list-style: none; margin: 0 0 10px; padding: 0; }
+  .pedido-lineas li { margin: 0 0 2px; }
+  .pedido-lineas .nota, .pedido-dato .menor { color: var(--gris); font-size: 0.92em; }
+  .pedido-dato { margin: 0 0 6px; font-size: 0.96rem; }
+  .pedido-dato b { color: var(--tinta); }
+  .pedido-dedicatoria { margin: 8px 0; padding: 10px 12px; background: var(--lima-claro); border-radius: var(--radio-s); white-space: pre-line; font-size: 0.96rem; }
+  .pedido-nota-interna { margin: 8px 0; padding: 8px 12px; background: #fff4d1; border-radius: var(--radio-s); font-size: 0.94rem; white-space: pre-line; }
+  .pedido-acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+  .ficha { width: min(680px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; border: 0; border-radius: var(--radio); box-shadow: 0 30px 60px -20px rgba(43, 35, 80, 0.6); color: var(--tinta); }
+  .ficha::backdrop { background: rgba(31, 27, 46, 0.55); }
+  .ficha-interior { padding: 20px; }
+  .ficha h2 { font-size: 1.5rem; margin: 0 0 4px; }
+  .ficha h3 { font: 600 1rem/1.3 var(--sans); letter-spacing: 0; margin: 20px 0 8px; padding-top: 14px; border-top: 1px solid var(--linea); }
+  .ficha-cerrar { position: sticky; top: 0; display: flex; justify-content: flex-end; padding: 10px 12px 0; background: var(--blanco); z-index: 1; }
+  .ficha .campo { margin-bottom: 12px; }
+  .ficha .en-linea { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+  .ficha .en-linea .campo { flex: 1 1 180px; margin-bottom: 0; }
+  .historial { list-style: none; margin: 0; padding: 0; font-size: 0.9rem; color: var(--gris); }
+  .historial li { margin: 0 0 4px; }
+  .peligro { color: var(--rojo); }
+  .boton.rojo { background: var(--rojo); }
+  .boton.rojo:hover { background: #8c1d18; }
+
+  .apuntar { max-width: 760px; }
+  .apuntar .en-linea { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+  .linea-manual { display: grid; grid-template-columns: 1fr 64px 92px 44px; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .linea-manual button { height: 44px; border: 0; background: none; color: var(--rojo); font-size: 1.4rem; cursor: pointer; border-radius: var(--radio-s); }
+  .linea-manual button:hover { background: var(--rojo-claro); }
+  .linea-manual input { padding-inline: 10px; }
+  .total-manual { font-size: 1.15rem; margin: 6px 0 16px; }
+
+  .dia { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--linea); }
+  .dia-nombre { font-weight: 600; }
+  .dia[data-abre='no'] .dia-nombre { color: var(--gris); font-weight: 400; }
+  .dia-cifras { grid-column: 1 / -1; color: var(--gris); font-size: 0.92rem; }
+  .dia details { grid-column: 1 / -1; }
+  .dia summary { cursor: pointer; color: var(--violeta); font-size: 0.94rem; min-height: 36px; display: inline-flex; align-items: center; }
+  .dia-cambios { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 8px 0 4px; }
+  .dia-cambios .campo { margin: 0; width: 130px; }
+  .dia-cambios .campo.ancha { width: min(100%, 260px); }
+
+  .presupuesto { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 16px; margin-bottom: 12px; }
+  .presupuesto[data-estado='nuevo'] { border-left: 5px solid var(--violeta); }
+  .presupuesto-mensaje { white-space: pre-line; margin: 8px 0 12px; }
+  .presupuesto .en-linea { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+  .presupuesto .en-linea .campo { margin: 0; flex: 1 1 200px; }
+
+  .exportar { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 8px; }
+  .exportar .campo { margin: 0; width: 180px; }
+  .diagnostico { list-style: none; margin: 0 0 16px; padding: 0; max-width: 760px; }
+  .diagnostico li { display: grid; grid-template-columns: 26px 1fr; gap: 8px; margin: 0; padding: 9px 0; border-bottom: 1px solid var(--linea); }
+  .diagnostico .marca { font-weight: 600; }
+  .diagnostico .ok { color: var(--verde); }
+  .diagnostico .falta { color: #9a6b00; }
+
+  .hoja { display: none; }
+  @media print {
+    body > *:not(.hoja) { display: none !important; }
+    .hoja { display: block; color: #000; font-size: 13pt; line-height: 1.4; }
+    .hoja h1 { font: 700 20pt/1.2 var(--sans); color: #000; margin: 0 0 6pt; }
+    .hoja h2 { font: 700 13pt/1.2 var(--sans); color: #000; margin: 14pt 0 4pt; }
+    .hoja ul { margin: 0; padding-left: 16pt; }
+    .hoja .tarjeta-imprimir { margin-top: 16pt; padding: 12pt; border: 1.5pt dashed #000; white-space: pre-line; font-size: 15pt; }
+    .hoja p { margin: 0 0 4pt; }
+  }
+</style>

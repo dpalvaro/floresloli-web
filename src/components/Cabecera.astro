@@ -1,0 +1,334 @@
+---
+/*
+ * Cabecera: el rótulo de la tienda. Fondo lima, nombre en violeta y los teléfonos
+ * a la derecha, con el faldón del toldo colgando por debajo.
+ */
+import Icono from './Icono.astro';
+import { rutaCategoria, rutaOcasion } from '../../compartido/catalogo.ts';
+import { NEGOCIO, enlaceTelefono, enlaceWhatsApp } from '../../compartido/negocio.ts';
+import {
+  RUTA_A_MEDIDA,
+  RUTA_CONTACTO,
+  RUTA_EVENTOS,
+  RUTA_HOSPITAL,
+  RUTA_PEDIDO,
+  RUTA_REPARTO,
+  RUTA_TIENDA,
+  categoriasConPagina,
+  ocasionesConPagina,
+} from '../lib/rutas.ts';
+
+interface Props {
+  simple?: boolean;
+}
+
+const { simple = false } = Astro.props;
+const aqui = Astro.url.pathname;
+const actual = (ruta: string) => (aqui === ruta ? 'page' : undefined);
+
+const categorias = categoriasConPagina();
+const ocasiones = ocasionesConPagina();
+const logos = import.meta.glob<{ default: { src: string; width: number; height: number } }>('../assets/logo.{svg,png,webp}', { eager: true });
+const logo = NEGOCIO.logo ? Object.values(logos)[0]?.default : undefined;
+---
+
+<header class="cabecera no-imprimir" data-cabecera>
+  <div class="envoltura barra">
+    {
+      !simple && (
+        <button class="abrir-menu" type="button" aria-expanded="false" aria-controls="menu-principal" data-abrir-menu>
+          <span class="icono-abrir"><Icono nombre="menu" tamano={26} /></span>
+          <span class="icono-cerrar"><Icono nombre="cerrar" tamano={26} /></span>
+          <span class="solo-lectores">Menú</span>
+        </button>
+      )
+    }
+
+    <a class="marca" href="/" aria-label={`${NEGOCIO.nombre}: inicio`}>
+      {logo ? <img src={logo.src} width={logo.width} height={logo.height} alt="" /> : <span>{NEGOCIO.nombreCorto}</span>}
+    </a>
+
+    {
+      !simple && (
+        <nav id="menu-principal" class="menu" aria-label="Principal">
+          <ul class="menu-lista">
+            <li class="con-sub">
+              <button type="button" class="menu-boton" aria-expanded="false" data-submenu>
+                Flores y plantas <Icono nombre="flecha" tamano={16} />
+              </button>
+              <ul class="sub">
+                <li>
+                  <a href={RUTA_TIENDA} aria-current={actual(RUTA_TIENDA)}>
+                    Todo el catálogo
+                  </a>
+                </li>
+                {categorias.map((c) => (
+                  <li>
+                    <a href={rutaCategoria(c)} aria-current={actual(rutaCategoria(c))}>
+                      {c.nombre}
+                    </a>
+                  </li>
+                ))}
+                <li>
+                  <a href={RUTA_A_MEDIDA} aria-current={actual(RUTA_A_MEDIDA)}>
+                    Ramo a tu medida
+                  </a>
+                </li>
+              </ul>
+            </li>
+            {ocasiones.length > 0 && (
+              <li class="con-sub">
+                <button type="button" class="menu-boton" aria-expanded="false" data-submenu>
+                  Ocasiones <Icono nombre="flecha" tamano={16} />
+                </button>
+                <ul class="sub">
+                  {ocasiones.map((o) => (
+                    <li>
+                      <a href={rutaOcasion(o)} aria-current={actual(rutaOcasion(o))}>
+                        {o.nombre}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            )}
+            <li>
+              <a class="menu-enlace" href={RUTA_HOSPITAL} aria-current={actual(RUTA_HOSPITAL)}>
+                Hospital
+              </a>
+            </li>
+            <li>
+              <a class="menu-enlace" href={RUTA_EVENTOS} aria-current={actual(RUTA_EVENTOS)}>
+                Bodas y eventos
+              </a>
+            </li>
+            <li>
+              <a class="menu-enlace" href={RUTA_REPARTO} aria-current={actual(RUTA_REPARTO)}>
+                Reparto
+              </a>
+            </li>
+            <li>
+              <a class="menu-enlace" href={RUTA_CONTACTO} aria-current={actual(RUTA_CONTACTO)}>
+                Dónde estamos
+              </a>
+            </li>
+          </ul>
+          <div class="menu-contacto">
+            <a class="boton oscuro" href={enlaceTelefono(NEGOCIO.telefono)}>
+              <Icono nombre="telefono" /> Llamar al {NEGOCIO.telefono}
+            </a>
+            <a class="boton wa" href={enlaceWhatsApp()} rel="noopener">
+              <Icono nombre="whatsapp" /> WhatsApp {NEGOCIO.movil}
+            </a>
+          </div>
+        </nav>
+      )
+    }
+
+    <div class="acciones">
+      <a class="accion tel" href={enlaceTelefono(NEGOCIO.telefono)} aria-label={`Llamar al ${NEGOCIO.telefono}`}>
+        <Icono nombre="telefono" tamano={22} />
+        <span class="tel-numero">{NEGOCIO.telefono}</span>
+      </a>
+      {
+        !simple && (
+          <a class="accion cesta" href={RUTA_PEDIDO} data-cesta-enlace>
+            <Icono nombre="cesta" tamano={26} />
+            <span class="solo-lectores">Tu cesta</span>
+            <span class="cuenta" data-cesta-cuenta hidden />
+          </a>
+        )
+      }
+    </div>
+  </div>
+  <div class="feston" aria-hidden="true"></div>
+</header>
+
+<style>
+  .cabecera {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--lima);
+    color: var(--violeta-osc);
+  }
+  .cabecera .feston {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+  }
+  .barra {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--cabecera);
+  }
+  .marca {
+    font-family: var(--serif);
+    font-size: 1.65rem;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--violeta);
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 8px 4px;
+    margin-right: auto;
+  }
+  .marca:hover { color: var(--violeta-osc); }
+  .marca img { height: 40px; width: auto; }
+
+  .abrir-menu,
+  .accion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 46px;
+    min-height: 46px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--violeta-osc);
+    font: 600 1rem/1 var(--sans);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .abrir-menu { margin-left: -10px; }
+  .abrir-menu:hover,
+  .accion:hover { background: var(--lima-osc); color: var(--violeta-osc); }
+  .icono-cerrar { display: none; }
+  [data-abierto] .icono-abrir { display: none; }
+  [data-abierto] .icono-cerrar { display: block; }
+
+  .acciones { display: flex; align-items: center; gap: 2px; }
+  .tel-numero { display: none; }
+  .cesta { position: relative; }
+  .cuenta {
+    position: absolute;
+    top: 2px;
+    right: 0;
+    min-width: 21px;
+    height: 21px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--violeta);
+    color: #fff;
+    font: 600 0.78rem/21px var(--sans);
+    text-align: center;
+  }
+
+  /* --- Menú en móvil: panel que se despliega bajo la cabecera --- */
+  .menu {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    max-height: calc(100dvh - var(--cabecera));
+    overflow-y: auto;
+    background: var(--blanco);
+    border-bottom: 1px solid var(--linea);
+    box-shadow: 0 18px 30px -18px rgba(43, 35, 80, 0.45);
+    padding: 8px var(--margen) 24px;
+  }
+  [data-abierto] .menu { display: block; }
+  [data-abierto] .feston { display: none; }
+
+  .menu-lista,
+  .sub { list-style: none; margin: 0; padding: 0; }
+  .menu-lista > li { margin: 0; border-bottom: 1px solid var(--linea); }
+  .sub li { margin: 0; }
+
+  .menu-boton,
+  .menu-enlace {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    min-height: 54px;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    color: var(--violeta-osc);
+    font: 600 1.08rem/1.2 var(--sans);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .menu-boton :global(svg) { transition: transform 0.15s ease; }
+  .menu-boton[aria-expanded='true'] :global(svg) { transform: rotate(180deg); }
+
+  .sub { display: none; padding: 0 0 12px 4px; }
+  .menu-boton[aria-expanded='true'] + .sub { display: block; }
+  .sub a {
+    display: flex;
+    align-items: center;
+    min-height: 46px;
+    padding: 0 12px;
+    border-radius: var(--radio-s);
+    color: var(--tinta);
+    text-decoration: none;
+  }
+  .sub a:hover { background: var(--violeta-claro); }
+  .menu a[aria-current='page'] { color: var(--violeta); font-weight: 600; }
+
+  .menu-contacto { display: grid; gap: 10px; margin-top: 20px; }
+
+  /* --- Escritorio: menú en línea con desplegables --- */
+  @media (min-width: 1000px) {
+    .abrir-menu { display: none; }
+    .marca { font-size: 2rem; margin-right: 12px; }
+    .marca img { height: 50px; }
+    .barra { gap: 12px; }
+
+    .menu {
+      display: block;
+      position: static;
+      max-height: none;
+      overflow: visible;
+      background: none;
+      border: 0;
+      box-shadow: none;
+      padding: 0;
+      margin-right: auto;
+    }
+    [data-abierto] .feston { display: block; }
+    .menu-lista { display: flex; align-items: center; gap: 2px; }
+    .menu-lista > li { border: 0; position: relative; }
+    .menu-boton,
+    .menu-enlace {
+      width: auto;
+      min-height: 44px;
+      padding: 0 13px;
+      border-radius: 999px;
+      font-size: 0.98rem;
+      white-space: nowrap;
+    }
+    .menu-boton:hover,
+    .menu-enlace:hover,
+    .menu-boton[aria-expanded='true'] { background: var(--lima-osc); color: var(--violeta-osc); }
+    .menu-enlace[aria-current='page'] { box-shadow: inset 0 -2px 0 var(--violeta); border-radius: 0; color: var(--violeta-osc); }
+
+    .sub {
+      position: absolute;
+      left: 0;
+      top: calc(100% + 10px);
+      min-width: 250px;
+      padding: 8px;
+      background: var(--blanco);
+      border: 1px solid var(--linea);
+      border-radius: var(--radio);
+      box-shadow: 0 18px 36px -16px rgba(43, 35, 80, 0.4);
+    }
+    .sub a { min-height: 42px; white-space: nowrap; }
+    .menu-contacto { display: none; }
+  }
+
+  @media (min-width: 1200px) {
+    .tel-numero { display: inline; }
+    .accion.tel { padding: 0 14px; }
+  }
+</style>

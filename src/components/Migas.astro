@@ -1,0 +1,16 @@
+---
+interface Props {
+  migas: { nombre: string; ruta: string }[];
+}
+const { migas } = Astro.props;
+---
+
+<nav aria-label="Estás en">
+  <ol class="migas">
+    {
+      migas.map((m, i) => (
+        <li>{i === migas.length - 1 ? <span aria-current="page">{m.nombre}</span> : <a href={m.ruta}>{m.nombre}</a>}</li>
+      ))
+    }
+  </ol>
+</nav>

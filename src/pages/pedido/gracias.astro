@@ -1,0 +1,104 @@
+---
+/* Confirmación del pedido: a esta página vuelve el cliente después de pagar. */
+import Base from '../../layouts/Base.astro';
+import Icono from '../../components/Icono.astro';
+import { NEGOCIO, direccionCompleta, enlaceTelefono, enlaceWhatsApp, horarioParaMostrar } from '../../../compartido/negocio.ts';
+import { RUTA_PEDIDO, RUTA_TIENDA } from '../../lib/rutas.ts';
+
+const horario = horarioParaMostrar()
+  .filter((h) => h.horas[0] !== 'Cerrado')
+  .map((h) => `${h.dias.toLowerCase()}, de ${h.horas.join(' y de ').replaceAll(' – ', ' a ')}`)
+  .join('; ');
+---
+
+<Base titulo="Tu pedido" descripcion={`Confirmación de tu pedido en ${NEGOCIO.nombre}.`} noindex simple>
+  <div class="envoltura estrecha gracias" data-gracias>
+    <div data-cargando role="status">
+      <h1>Un momento…</h1>
+      <p class="entrada">Estamos comprobando tu pedido.</p>
+    </div>
+
+    <div data-recibido hidden>
+      <p class="marca-ok"><Icono nombre="correcto" tamano={34} /></p>
+      <h1 tabindex="-1" data-titulo>Pedido recibido</h1>
+      <p class="entrada" data-entrada></p>
+      <p class="referencia">Número de pedido: <strong data-ref></strong></p>
+      <p class="aviso ambar" data-prueba hidden>Pedido de prueba: no se ha cobrado nada y la tienda no lo va a preparar.</p>
+
+      <div class="caja" data-detalle></div>
+
+      <div class="siguiente">
+        <h2>Y ahora</h2>
+        <ul>
+          <li data-paso-justificante>Te llega el justificante del pago al correo que has indicado.</li>
+          <li data-paso-recogida hidden>
+            Recógelo en {direccionCompleta()}. Horario: {horario}.
+          </li>
+          <li data-paso-reparto hidden>Lo llevamos en el horario de la tienda. Si no hay nadie, llamamos antes de volver.</li>
+          <li>
+            Si tienes que cambiar algo, llama al <a href={enlaceTelefono(NEGOCIO.telefono)}>{NEGOCIO.telefono}</a> o escribe por
+            <a href={enlaceWhatsApp('Hola, tengo una consulta sobre mi pedido de la web.')} rel="noopener" data-wa-pedido>WhatsApp</a> con el número de pedido.
+          </li>
+        </ul>
+      </div>
+      <div class="botones no-imprimir">
+        <button class="boton linea" type="button" data-imprimir><Icono nombre="imprimir" /> Imprimir</button>
+        <a class="boton" href="/">Volver al inicio</a>
+      </div>
+    </div>
+
+    <div data-esperando hidden>
+      <h1 tabindex="-1">Estamos esperando la confirmación del pago</h1>
+      <p class="entrada">
+        A veces tarda unos segundos. No hace falta que pagues otra vez: esta página se actualiza sola.
+      </p>
+      <p class="referencia">Número de pedido: <strong data-ref></strong></p>
+      <p>
+        Si en un par de minutos sigue igual, llama al <a href={enlaceTelefono(NEGOCIO.telefono)}>{NEGOCIO.telefono}</a> con el número de pedido y
+        lo comprobamos.
+      </p>
+    </div>
+
+    <div data-sin-pago hidden>
+      <h1 tabindex="-1">Este pedido no llegó a pagarse</h1>
+      <p class="entrada">No se ha cobrado nada. Tu cesta sigue guardada: puedes volver a intentarlo.</p>
+      <div class="botones">
+        <a class="boton" href={RUTA_PEDIDO}>Volver a mi pedido</a>
+        <a class="boton linea" href={enlaceTelefono(NEGOCIO.telefono)}><Icono nombre="telefono" /> {NEGOCIO.telefono}</a>
+      </div>
+    </div>
+
+    <div data-no-encontrado hidden>
+      <h1 tabindex="-1">No encontramos ese pedido</h1>
+      <p class="entrada">
+        El enlace no es correcto o ha caducado. Si has pagado, tu pedido está registrado: llama al
+        <a href={enlaceTelefono(NEGOCIO.telefono)}>{NEGOCIO.telefono}</a> y lo comprobamos.
+      </p>
+      <div class="botones">
+        <a class="boton" href={RUTA_TIENDA}>Ver flores y plantas</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import '../../scripts/gracias.ts';
+  </script>
+</Base>
+
+<style>
+  .gracias { padding-block: clamp(36px, 7vw, 72px) var(--hueco-seccion); }
+  h1 { font-size: clamp(2rem, 5.4vw, 3rem); margin-bottom: 0.35em; }
+  h1:focus { outline: none; }
+  .marca-ok { width: 60px; height: 60px; border-radius: 50%; background: var(--lima); color: var(--violeta-osc); display: grid; place-items: center; margin-bottom: 18px; }
+  .referencia { margin: 18px 0; font-size: 1.1rem; }
+  .referencia strong { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.04em; }
+  .caja { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 20px; margin: 22px 0; }
+  .caja :global(.pedido-lineas) { list-style: none; margin: 0 0 18px; padding: 0; }
+  .caja :global(.pedido-lineas li) { display: flex; justify-content: space-between; gap: 16px; margin: 0; padding: 8px 0; border-bottom: 1px solid var(--linea); }
+  .caja :global(.pedido-lineas .importe) { white-space: nowrap; font-weight: 600; }
+  .caja :global(.pedido-lineas .total) { border-bottom: 0; font-weight: 600; font-size: 1.12rem; color: var(--violeta-osc); }
+  .caja :global(.datos dd) { white-space: pre-line; }
+  .siguiente h2 { font-size: clamp(1.4rem, 3.4vw, 1.75rem); margin: 1.2em 0 0.5em; }
+  .siguiente ul { color: var(--gris); }
+  .botones { margin-top: 26px; }
+</style>

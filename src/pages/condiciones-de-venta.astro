@@ -1,0 +1,116 @@
+---
+/*
+ * Condiciones de venta. PENDIENTE: revisión jurídica y confirmación con Loli de los
+ * compromisos (cancelación, sustitución de flor, plazo de aviso). Ver compartido/pendientes.ts.
+ */
+import PaginaLegal from '../components/PaginaLegal.astro';
+import { euros } from '../../compartido/catalogo.ts';
+import { NEGOCIO, domicilioLegal, direccionCompleta, enlaceTelefono } from '../../compartido/negocio.ts';
+import { TIENDA } from '../../compartido/tienda.ts';
+import { RUTA_HOSPITAL, RUTA_REPARTO } from '../lib/rutas.ts';
+
+const L = NEGOCIO.legal;
+const horaLimite = TIENDA.horaLimiteMismoDia.replace(/^0/, '');
+const C = TIENDA.condiciones;
+const envio = TIENDA.entrega.domicilio.zonas[0]?.precio;
+const formasDePago = TIENDA.pago.bizum ? 'con tarjeta o con Bizum' : 'con tarjeta';
+---
+
+<PaginaLegal titulo="Condiciones de venta" descripcion={`Cómo se compra en la tienda online de ${NEGOCIO.nombre}: precios, pago, entrega, cambios, devoluciones y reclamaciones.`} actualizado="10 de noviembre de 2026">
+  <h2>1. Quién vende</h2>
+  <p>
+    Vende {L.titular}{L.nif ? `, con NIF ${L.nif}` : ''}, titular de {NEGOCIO.nombre}, con domicilio en {domicilioLegal()}. Puedes contactar en el
+    <a href={enlaceTelefono(NEGOCIO.telefono)}>{NEGOCIO.telefono}</a> o en <a href={`mailto:${NEGOCIO.correo}`}>{NEGOCIO.correo}</a>.
+  </p>
+
+  <h2>2. Los productos</h2>
+  <p>
+    Vendemos flores, plantas, centros y complementos. Cada ramo y cada centro se montan a mano para tu pedido, con flor fresca de temporada. Las
+    fotos son orientativas: el tuyo será del mismo estilo y tamaño, pero no idéntico.
+  </p>
+  <p>
+    Si el día de la entrega falta alguna flor, la cambiamos por otra parecida y del mismo valor. Si el cambio fuera importante, te llamamos antes
+    de prepararlo.
+  </p>
+
+  <h2>3. Precios</h2>
+  <p>
+    Los precios están en euros y llevan el IVA incluido. El reparto se cobra aparte{envio != null ? ` (${euros(envio)} en Toledo capital)` : ''} y
+    lo verás sumado antes de pagar. Recoger en la tienda es gratis. El precio que vale es el que aparece al confirmar el pedido.
+  </p>
+
+  <h2>4. Cómo se hace un pedido</h2>
+  <ol>
+    <li>Elige los productos y añádelos a la cesta.</li>
+    <li>Indica si lo recoges o si te lo llevamos, el día y, si quieres, la dedicatoria.</li>
+    <li>Revisa el resumen, acepta estas condiciones y paga.</li>
+    <li>Verás la confirmación en pantalla con el número de pedido y recibirás el justificante de pago en tu correo.</li>
+  </ol>
+  <p>El contrato se celebra en español. Si te equivocas con algún dato, llámanos cuanto antes y lo corregimos.</p>
+
+  <h2>5. Pago</h2>
+  <p>
+    Se paga {formasDePago} en una página segura de Stripe, en el momento de hacer el pedido. La tienda no ve ni guarda los datos de tu tarjeta.
+    Si el pago no se completa, el pedido no se prepara.
+  </p>
+
+  <h2>6. Entrega</h2>
+  <ul>
+    <li><strong>Recogida en la tienda:</strong> en {direccionCompleta()}, el día que elijas, en el horario de la tienda.</li>
+    <li>
+      <strong>Reparto a domicilio:</strong> en Toledo capital, el día que elijas, en el horario de la tienda y sin franjas horarias. Para otros
+      municipios, consulta antes. Más información en <a href={RUTA_REPARTO}>reparto a domicilio</a>.
+    </li>
+    <li>
+      <strong>Hospital Universitario de Toledo:</strong> cada unidad tiene sus normas y algunas no admiten flores ni plantas; compruébalo antes
+      de encargar. Más información en <a href={RUTA_HOSPITAL}>flores al hospital</a>.
+    </li>
+  </ul>
+  <p>Para el mismo día, el pedido tiene que hacerse antes de las {horaLimite}. Los domingos y festivos no se reparte, salvo en fechas señaladas.</p>
+  <p>
+    Si no hay nadie en la dirección de entrega, llamamos y volvemos en otro momento o lo dejamos a un vecino, avisándote antes. Si los datos de
+    entrega no son correctos y no podemos entregarlo, te llamamos para buscar una solución.
+  </p>
+
+  <h2>7. Cambios y cancelaciones</h2>
+  <p>
+    Puedes cambiar o cancelar tu pedido sin coste <strong>hasta el día anterior a la entrega</strong>, llamando al
+    <a href={enlaceTelefono(NEGOCIO.telefono)}>{NEGOCIO.telefono}</a>. Si lo cancelas, te devolvemos el importe completo por el mismo medio de
+    pago. El mismo día de la entrega, solo se puede cancelar si todavía no hemos empezado a prepararlo.
+  </p>
+
+  <h2>8. Derecho de desistimiento</h2>
+  <p>
+    Las flores y las plantas son productos que se estropean con rapidez, y los ramos y centros se preparan a medida para cada pedido. Por eso la
+    ley (artículo 103 del texto refundido de la Ley General para la Defensa de los Consumidores y Usuarios) no reconoce el derecho de desistimiento
+    para estos productos.
+  </p>
+  <p>
+    Los complementos que no se estropean (jarrones, peluches y similares) sí se pueden devolver en {C.diasDesistimientoComplementos} días naturales
+    desde que los recibes, sin usar y en su embalaje. Avísanos por correo o en la tienda, con tu nombre, el número de pedido y la fecha; puedes
+    usar este texto: «Comunico que desisto de la compra del siguiente producto: … Pedido número … recibido el día … Nombre y firma». Te
+    devolveremos lo pagado por ese producto en un máximo de 14 días desde tu aviso. Los gastos de devolverlo corren de tu cuenta.
+  </p>
+
+  <h2>9. Si algo no está bien</h2>
+  <p>
+    Si el pedido llega en mal estado o no es lo que encargaste, avísanos en las {C.horasAvisoProblema} horas siguientes a la entrega, con una
+    foto si puedes, por teléfono, por WhatsApp al {NEGOCIO.movil} o por correo. Lo repondremos o te devolveremos el dinero. Esto no limita los
+    derechos que te da la garantía legal de conformidad.
+  </p>
+
+  <h2>10. Factura</h2>
+  <p>Con cada pedido recibes un justificante de pago. Si necesitas factura, pídela a la tienda indicando tus datos fiscales.</p>
+
+  <h2>11. Reclamaciones</h2>
+  <p>
+    Puedes reclamar por teléfono, por correo o en la tienda, donde hay hojas de reclamaciones a tu disposición. También puedes acudir a los
+    servicios de consumo de Castilla-La Mancha.
+  </p>
+
+  <h2>12. Datos personales</h2>
+  <p>Tus datos se tratan como explica la <a href="/privacidad/">política de privacidad</a>.</p>
+
+  <h2>13. Ley aplicable</h2>
+  <p>Estas condiciones se rigen por la ley española. Si eres consumidor, los juzgados competentes son los de tu domicilio.</p>
+</PaginaLegal>

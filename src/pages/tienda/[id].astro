@@ -1,0 +1,336 @@
+---
+import { Picture, getImage } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import FotoProducto from '../../components/FotoProducto.astro';
+import Icono from '../../components/Icono.astro';
+import Migas from '../../components/Migas.astro';
+import TarjetaProducto from '../../components/TarjetaProducto.astro';
+import type { Producto } from '../../../compartido/catalogo.ts';
+import { categoriaPorId, euros, preciosALaVista, productosDeCategoria, productosDeTienda, rutaCategoria, rutaProducto } from '../../../compartido/catalogo.ts';
+import { SALUDO_WHATSAPP, enlaceWhatsApp } from '../../../compartido/negocio.ts';
+import { TIENDA } from '../../../compartido/tienda.ts';
+import { ENTORNO } from '../../lib/entorno.ts';
+import { foto } from '../../lib/imagenes.ts';
+import { etiquetaDePrueba, textoPrecio } from '../../lib/precios.ts';
+import { RUTA_HOSPITAL, RUTA_PEDIDO, RUTA_REPARTO, RUTA_TIENDA } from '../../lib/rutas.ts';
+import { jsonLdMigas, jsonLdProducto } from '../../lib/seo.ts';
+
+export function getStaticPaths() {
+  return productosDeTienda(ENTORNO).map((producto) => ({ params: { id: producto.id }, props: { producto } }));
+}
+
+interface Props {
+  producto: Producto;
+}
+const { producto: p } = Astro.props;
+
+const categoria = categoriaPorId(p.categoria);
+const ruta = rutaProducto(p);
+const migas = [
+  { nombre: 'Inicio', ruta: '/' },
+  { nombre: categoria.nombre, ruta: rutaCategoria(categoria) },
+  { nombre: p.nombre, ruta },
+];
+
+const verPrecios = preciosALaVista(p, ENTORNO);
+const precio = textoPrecio(p, ENTORNO, true);
+const prueba = etiquetaDePrueba(p, ENTORNO);
+const variantes = p.variantes ?? [];
+const modelos = (p.modelos ?? []).map((nombre) => foto(nombre)).filter((m) => m !== undefined);
+const sobrio = !!categoria.sobrio;
+const envio = TIENDA.entrega.domicilio.zonas[0]?.precio;
+
+const fotoPrincipal = foto(p.fotos[0]);
+const fotosExtra = p.fotos.slice(1).filter((nombre) => foto(nombre));
+const imagenCompartir = fotoPrincipal
+  ? (await getImage({ src: fotoPrincipal, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 78 })).src
+  : undefined;
+const imagenDatos = fotoPrincipal ? (await getImage({ src: fotoPrincipal, width: Math.min(1000, fotoPrincipal.width), format: 'jpg', quality: 78 })).src : undefined;
+
+const relacionados = productosDeCategoria(p.categoria, ENTORNO)
+  .filter((x) => x.id !== p.id)
+  .slice(0, 4);
+
+const etiquetaNota = sobrio ? 'Indicaciones para prepararlo' : p.categoria === 'plantas' ? '¿Algo que debamos saber?' : '¿Algún color o flor que prefieras?';
+const mensajeWhatsApp = `${SALUDO_WHATSAPP}. Me interesa: ${p.nombre}.`;
+const descripcionBuscadores = `${p.resumen} Hecho a mano en el Polígono de Toledo: recógelo en la tienda o te lo llevamos a casa.`;
+---
+
+<Base titulo={`${p.nombre} en Toledo`} descripcion={descripcionBuscadores} imagen={imagenCompartir} tipoOg="product" jsonLd={[jsonLdMigas(migas), jsonLdProducto(p, ENTORNO, ruta, imagenDatos)]}>
+  <div class="envoltura ficha">
+    <Migas migas={migas} />
+
+    <div class="ficha-rejilla">
+      <div class="galeria">
+        <div class="marco principal">
+          <FotoProducto producto={p} principal tamanos="(min-width: 900px) 520px, 92vw" anchos={[480, 720, 1000]} />
+        </div>
+        {
+          fotosExtra.length > 0 && (
+            <ul class="extra">
+              {fotosExtra.map((nombre) => (
+                <li class="marco">
+                  <FotoProducto producto={p} nombre={nombre} alt={`${p.nombre}: otra vista`} tamanos="(min-width: 900px) 250px, 45vw" anchos={[240, 360, 540]} />
+                </li>
+              ))}
+            </ul>
+          )
+        }
+        {!fotoPrincipal && ENTORNO === 'pruebas' && <p class="nota-foto">Ilustración provisional: falta la foto real de este producto.</p>}
+      </div>
+
+      <div class="compra-columna">
+        <h1>{p.nombre}</h1>
+        <p class="entrada resumen">{p.resumen}</p>
+
+        <p class="precio" data-precio-vista data-sin-precio={precio.sinPrecio ? 'si' : undefined}>
+          {precio.texto}
+        </p>
+        {verPrecios && !precio.sinPrecio && !p.aMedida && <p class="iva">IVA incluido</p>}
+        {prueba && <p class="aviso ambar aviso-prueba">{prueba}: sin confirmar con la tienda. En la web pública no se enseña.</p>}
+        {p.temporada && <p class="temporada"><span class="etiqueta lima">De temporada</span> {p.temporada.texto}.</p>}
+
+        <form class="compra" data-compra data-id={p.id} data-a-medida={p.aMedida ? 'si' : undefined} data-modelos={modelos.length || undefined} novalidate>
+          {
+            variantes.length > 0 && (
+              <fieldset class="campo">
+                <legend>Elige una opción</legend>
+                <div class="opciones">
+                  {variantes.map((v, i) => (
+                    <label class="opcion">
+                      <input type="radio" name="variante" value={v.id} checked={i === 0} data-precio={verPrecios && v.precio != null ? euros(v.precio) : undefined} />
+                      <span class="nombre">{v.nombre}</span>
+                      {verPrecios && v.precio != null && <span class="precio-opcion">{euros(v.precio)}</span>}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )
+          }
+
+          {
+            p.aMedida && (
+              <fieldset class="campo">
+                <legend>¿Cuánto quieres gastar?</legend>
+                {verPrecios && (
+                  <div class="importes">
+                    {TIENDA.ramoAMedida.importes.map((importe) => (
+                      <button type="button" class="importe" data-importe={importe} aria-pressed="false">
+                        {euros(importe)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <label for="importe" class="rotulo-menor">
+                  Importe en euros, entre {TIENDA.ramoAMedida.minimo} y {TIENDA.ramoAMedida.maximo}
+                </label>
+                <input
+                  id="importe"
+                  name="importe"
+                  type="number"
+                  inputmode="numeric"
+                  min={TIENDA.ramoAMedida.minimo}
+                  max={TIENDA.ramoAMedida.maximo}
+                  step="1"
+                  autocomplete="off"
+                  aria-describedby="error-compra"
+                />
+              </fieldset>
+            )
+          }
+
+          {
+            modelos.length > 0 && (
+              <fieldset class="campo">
+                <legend>Elige un modelo</legend>
+                <div class="modelos">
+                  {modelos.map((imagen, i) => (
+                    <label class="modelo">
+                      <input type="radio" name="modelo" value={i + 1} />
+                      <span class="marco cuadrado">
+                        <Picture src={imagen} alt={`Modelo ${i + 1} de centro de flor artificial`} widths={[200, 320, 480]} sizes="(min-width: 900px) 130px, 44vw" formats={['webp']} fallbackFormat="jpg" quality={70} />
+                      </span>
+                      <span class="modelo-nombre">Modelo {i + 1}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )
+          }
+
+          <div class="campo">
+            <label for="nota">
+              {etiquetaNota} <span class="opcional">(opcional)</span>
+            </label>
+            <input id="nota" name="nota" type="text" maxlength="200" autocomplete="off" />
+          </div>
+
+          <div class="fila-compra">
+            <div class="cantidad">
+              <button type="button" data-menos aria-label="Quitar una unidad"><Icono nombre="menos" tamano={20} /></button>
+              <label class="solo-lectores" for="cantidad">Cantidad</label>
+              <input id="cantidad" name="cantidad" type="number" inputmode="numeric" min="1" max={TIENDA.limites.unidadesPorLinea} value="1" />
+              <button type="button" data-mas aria-label="Añadir una unidad"><Icono nombre="mas" tamano={20} /></button>
+            </div>
+            <button class="boton grande" type="submit"><Icono nombre="cesta" /> Añadir a la cesta</button>
+          </div>
+
+          <p class="campo-error" id="error-compra" data-error role="alert" hidden></p>
+          <div class="aviso bien anadido" data-anadido role="status" hidden tabindex="-1">
+            <p>
+              <strong>Añadido a la cesta.</strong>
+            </p>
+            <div class="botones">
+              <a class="boton pequeno" href={RUTA_PEDIDO}>Ver la cesta y hacer el pedido</a>
+              <a class="boton linea pequeno" href={RUTA_TIENDA}>Seguir mirando</a>
+            </div>
+          </div>
+        </form>
+
+        {
+          precio.sinPrecio && (
+            <p class="sin-precio-nota">
+              Añádelo a la cesta y envíanos el encargo por WhatsApp: te confirmamos el precio antes de prepararlo.
+            </p>
+          )
+        }
+
+        <p class="duda">
+          <a href={enlaceWhatsApp(mensajeWhatsApp)} rel="noopener">
+            <Icono nombre="whatsapp" tamano={20} /> ¿Alguna duda? Pregúntanos por WhatsApp
+          </a>
+        </p>
+
+        <ul class="entrega">
+          <li><Icono nombre="tienda" tamano={22} /> <span>Recógelo gratis en la tienda.</span></li>
+          <li>
+            <Icono nombre="reparto" tamano={22} />
+            <span>
+              A domicilio en Toledo{envio != null ? `, ${euros(envio)}` : ''}. <a href={RUTA_REPARTO}>Ver el reparto</a>
+            </span>
+          </li>
+          {
+            p.hospital !== false && (
+              <li>
+                <Icono nombre="hospital" tamano={22} />
+                <span>
+                  También al Hospital Universitario. <a href={RUTA_HOSPITAL}>Cómo funciona</a>
+                </span>
+              </li>
+            )
+          }
+          {
+            p.categoria !== 'complementos' && (
+              <li><Icono nombre="tarjeta" tamano={22} /> <span>{sobrio ? 'Con tarjeta o cinta: escribe el texto al hacer el pedido.' : 'Con tarjeta escrita a mano: pon la dedicatoria al hacer el pedido.'}</span></li>
+            )
+          }
+        </ul>
+      </div>
+    </div>
+
+    <div class="detalle prosa">
+      <h2>Cómo es</h2>
+      {p.descripcion.map((parrafo) => <p>{parrafo}</p>)}
+      {p.detalles && <ul>{p.detalles.map((d) => <li>{d}</li>)}</ul>}
+      {p.hospital === false && !sobrio && <p>Este producto no se entrega en el hospital.</p>}
+    </div>
+  </div>
+
+  {
+    relacionados.length > 0 && (
+      <section class="seccion relacionados" aria-labelledby="t-relacionados">
+        <div class="envoltura">
+          <div class="cabeza-seccion">
+            <h2 id="t-relacionados">{sobrio ? 'Otras opciones' : 'También te puede gustar'}</h2>
+            <a class="enlace-mas" href={rutaCategoria(categoria)}>
+              Ver {categoria.nombre.toLowerCase()}
+            </a>
+          </div>
+          <ul class="rejilla-productos">
+            {relacionados.map((r) => <TarjetaProducto producto={r} />)}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <script>
+    import '../../scripts/producto.ts';
+  </script>
+</Base>
+
+<style>
+  .ficha { padding-top: clamp(28px, 5vw, 48px); }
+  .ficha-rejilla { display: grid; gap: 28px; }
+  .galeria { min-width: 0; }
+  .extra { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .extra li { margin: 0; }
+  .nota-foto { margin-top: 8px; font-size: 0.86rem; color: var(--gris); }
+
+  h1 { font-size: clamp(2rem, 5.4vw, 3rem); margin-bottom: 0.3em; }
+  .resumen { margin-bottom: 0.9em; }
+  .precio { font-family: var(--serif); font-size: clamp(1.9rem, 5vw, 2.5rem); line-height: 1.1; color: var(--violeta-osc); margin: 0; }
+  .precio[data-sin-precio] { font: 600 1.15rem/1.3 var(--sans); }
+  .iva { color: var(--gris); font-size: 0.88rem; margin: 2px 0 0; }
+  .aviso-prueba { margin-top: 14px; font-size: 0.9rem; }
+  .temporada { margin-top: 14px; font-size: 0.95rem; }
+
+  .compra { margin-top: 26px; }
+  .compra legend { margin-bottom: 8px; }
+  .precio-opcion { font-weight: 600; white-space: nowrap; }
+  .rotulo-menor { font-weight: 400; color: var(--gris); font-size: 0.92rem; }
+
+  .importes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .importe {
+    min-height: 48px;
+    min-width: 76px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1.5px solid #b9b4c9;
+    background: var(--blanco);
+    color: var(--violeta-osc);
+    font: 600 1rem/1 var(--sans);
+    cursor: pointer;
+  }
+  .importe:hover { border-color: var(--violeta); }
+  .importe[aria-pressed='true'] { background: var(--violeta-osc); border-color: var(--violeta-osc); color: #fff; }
+
+  .modelos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modelo { display: block; cursor: pointer; }
+  .modelo input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .modelo .marco { display: block; border: 3px solid transparent; }
+  .modelo input:checked + .marco { border-color: var(--violeta); }
+  .modelo input:focus-visible + .marco { outline: 3px solid var(--violeta); outline-offset: 2px; }
+  .modelo-nombre { display: block; margin-top: 4px; font-size: 0.92rem; font-weight: 600; }
+
+  .fila-compra { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .fila-compra .boton { flex: 1 1 220px; }
+  .cantidad { display: inline-flex; align-items: center; border: 1.5px solid #b9b4c9; border-radius: 999px; background: var(--blanco); height: 56px; }
+  .cantidad button { width: 50px; height: 100%; border: 0; background: none; color: var(--violeta-osc); cursor: pointer; display: grid; place-items: center; border-radius: 999px; }
+  .cantidad button:hover { background: var(--violeta-claro); }
+  .cantidad input { width: 44px; min-height: 0; height: 100%; padding: 0; border: 0; background: none; text-align: center; font-weight: 600; -moz-appearance: textfield; }
+  .cantidad input::-webkit-outer-spin-button, .cantidad input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  .campo-error { color: var(--rojo); font-weight: 600; margin: 12px 0 0; }
+  .anadido { margin-top: 16px; }
+  .anadido .botones { margin-top: 10px; }
+  .sin-precio-nota { margin-top: 16px; color: var(--gris); font-size: 0.95rem; }
+
+  .duda { margin: 20px 0 0; }
+  .duda a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--wa-osc); font-weight: 600; }
+
+  .entrega { list-style: none; margin: 18px 0 0; padding: 18px 0 0; border-top: 1px solid var(--linea); display: grid; gap: 10px; font-size: 0.95rem; color: var(--gris); }
+  .entrega li { margin: 0; display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; }
+  .entrega :global(svg) { color: var(--violeta); margin-top: 2px; }
+
+  .detalle { margin-top: clamp(36px, 6vw, 64px); }
+  .relacionados { padding-top: var(--hueco-seccion); }
+
+  @media (min-width: 560px) {
+    .modelos { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (min-width: 900px) {
+    .ficha-rejilla { grid-template-columns: minmax(0, 520px) minmax(0, 1fr); gap: 56px; align-items: start; }
+    .galeria { position: sticky; top: calc(var(--cabecera) + 32px); }
+  }
+</style>

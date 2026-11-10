@@ -1,0 +1,91 @@
+---
+import Base from '../../layouts/Base.astro';
+import ComoLlega from '../../components/ComoLlega.astro';
+import Migas from '../../components/Migas.astro';
+import TarjetaProducto from '../../components/TarjetaProducto.astro';
+import type { Ocasion } from '../../../compartido/catalogo.ts';
+import { productosDeOcasion, rutaOcasion } from '../../../compartido/catalogo.ts';
+import { ENTORNO } from '../../lib/entorno.ts';
+import { RUTA_A_MEDIDA, RUTA_HOSPITAL, RUTA_TIENDA, ocasionesConPagina } from '../../lib/rutas.ts';
+import { jsonLdMigas } from '../../lib/seo.ts';
+
+export function getStaticPaths() {
+  return ocasionesConPagina().map((ocasion) => ({ params: { ocasion: ocasion.slug }, props: { ocasion } }));
+}
+
+interface Props {
+  ocasion: Ocasion;
+}
+const { ocasion: o } = Astro.props;
+const productos = productosDeOcasion(o.id, ENTORNO);
+const otras = ocasionesConPagina().filter((x) => x.id !== o.id);
+const migas = [
+  { nombre: 'Inicio', ruta: '/' },
+  { nombre: 'Flores y plantas', ruta: RUTA_TIENDA },
+  { nombre: o.nombre, ruta: rutaOcasion(o) },
+];
+const conHospital = o.id === 'nacimiento' || o.id === 'animo';
+---
+
+<Base titulo={o.titulo} descripcion={o.descripcion} jsonLd={[jsonLdMigas(migas)]}>
+  <div class="envoltura cabeza-pagina">
+    <Migas migas={migas} />
+    <h1>{o.titulo}</h1>
+    <p class="entrada">{o.intro}</p>
+  </div>
+
+  <section class="seccion" aria-label={o.nombre}>
+    <div class="envoltura">
+      <ul class="rejilla-productos">
+        {productos.map((p, i) => <TarjetaProducto producto={p} nivel={2} principal={i < 2} />)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="envoltura">
+      <div class="aviso nota">
+        {
+          conHospital ? (
+            <p>
+              <strong>¿Está en el Hospital Universitario de Toledo?</strong> Se lo llevamos allí: estamos en el mismo barrio.{' '}
+              <a href={RUTA_HOSPITAL}>Flores al hospital</a>
+            </p>
+          ) : (
+            <p>
+              <strong>¿Prefieres que elijamos por ti?</strong> Dinos cuánto quieres gastar y para quién es. <a href={RUTA_A_MEDIDA}>Pedir un ramo a mi medida</a>
+            </p>
+          )
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="envoltura">
+      <ComoLlega />
+    </div>
+  </section>
+
+  {
+    otras.length > 0 && (
+      <section class="seccion" aria-labelledby="t-otras">
+        <div class="envoltura">
+          <h2 id="t-otras" class="titulo-otras">Otras ocasiones</h2>
+          <ul class="enlaces-relacionados">
+            {otras.map((x) => (
+              <li>
+                <a href={rutaOcasion(x)}>{x.nombre}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+</Base>
+
+<style>
+  .nota { max-width: 68ch; }
+  .titulo-otras { font-size: clamp(1.5rem, 3.4vw, 2rem); margin-bottom: 0.7em; }
+</style>

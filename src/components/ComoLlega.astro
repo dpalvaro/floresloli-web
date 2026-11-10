@@ -1,0 +1,51 @@
+---
+/* Bloque «Cómo te llega»: las formas de entrega, con enlaces a sus páginas. */
+import { euros } from '../../compartido/catalogo.ts';
+import { NEGOCIO, enlaceTelefono } from '../../compartido/negocio.ts';
+import { TIENDA } from '../../compartido/tienda.ts';
+import { RUTA_HOSPITAL, RUTA_REPARTO } from '../lib/rutas.ts';
+
+interface Props {
+  /** Tono sobrio (condolencias): sin hospital y con el teléfono por delante. */
+  sobrio?: boolean;
+}
+const { sobrio = false } = Astro.props;
+const envio = TIENDA.entrega.domicilio.zonas[0]?.precio;
+---
+
+<div class="como-llega">
+  <h2>{sobrio ? 'Entrega' : 'Cómo te llega'}</h2>
+  <ul>
+    <li>
+      <strong>Recoger en la tienda.</strong> Gratis, en la calle Río Alberche, 30.
+    </li>
+    <li>
+      <strong>A domicilio en Toledo.</strong>
+      {envio != null ? ` ${euros(envio)}. ` : ' '}A los pueblos cercanos, según la distancia. <a href={RUTA_REPARTO}>Ver el reparto</a>
+    </li>
+    {
+      !sobrio && (
+        <li>
+          <strong>Al Hospital Universitario de Toledo.</strong> Estamos en el mismo barrio. <a href={RUTA_HOSPITAL}>Cómo funciona</a>
+        </li>
+      )
+    }
+  </ul>
+  {
+    sobrio && (
+      <p>
+        Si es para hoy o para mañana, llámanos al <a href={enlaceTelefono(NEGOCIO.telefono)}>{NEGOCIO.telefono}</a>: así confirmamos la hora y el lugar
+        de entrega.
+      </p>
+    )
+  }
+</div>
+
+<style>
+  .como-llega { max-width: 68ch; }
+  h2 { font-size: clamp(1.5rem, 3.4vw, 2rem); margin-bottom: 0.6em; }
+  ul { list-style: none; padding: 0; margin: 0 0 1em; display: grid; gap: 10px; }
+  li { margin: 0; padding-left: 22px; position: relative; color: var(--gris); }
+  li::before { content: ''; position: absolute; left: 0; top: 0.55em; width: 9px; height: 9px; border-radius: 50%; background: var(--lima-osc); }
+  li strong { color: var(--tinta); }
+</style>

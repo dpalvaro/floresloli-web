@@ -1,0 +1,137 @@
+---
+import Base from '../layouts/Base.astro';
+import Icono from '../components/Icono.astro';
+import Migas from '../components/Migas.astro';
+import Preguntas from '../components/Preguntas.astro';
+import { euros } from '../../compartido/catalogo.ts';
+import { NEGOCIO, direccionCompleta, enlaceTelefono, enlaceWhatsApp, horarioParaMostrar, SALUDO_WHATSAPP } from '../../compartido/negocio.ts';
+import { TIENDA } from '../../compartido/tienda.ts';
+import { RUTA_HOSPITAL, RUTA_REPARTO, RUTA_TIENDA } from '../lib/rutas.ts';
+import { jsonLdFloristeria, jsonLdMigas, jsonLdPreguntas } from '../lib/seo.ts';
+
+const zonas = TIENDA.entrega.domicilio.zonas;
+const horaLimite = TIENDA.horaLimiteMismoDia.replace(/^0/, '');
+const horario = horarioParaMostrar().filter((h) => h.horas[0] !== 'Cerrado');
+const horarioEnTexto = horario.map((h) => `${h.dias.toLowerCase()}, de ${h.horas.join(' y de ').replaceAll(' – ', ' a ')}`).join('; ');
+
+const preguntas = [
+  {
+    pregunta: '¿Repartís el mismo día?',
+    respuesta: `Sí, si haces el pedido antes de las ${horaLimite} de un día en que la tienda abre. Si es más tarde, llámanos al ${NEGOCIO.telefono}: si da tiempo, lo llevamos.`,
+  },
+  {
+    pregunta: '¿Puedo elegir la hora de entrega?',
+    respuesta: `Repartimos en el horario de la tienda y no trabajamos con franjas horarias. Si lo necesitas a una hora concreta, llámanos antes de hacer el pedido.`,
+  },
+  {
+    pregunta: '¿Qué pasa si no hay nadie en casa?',
+    respuesta: 'Llamamos antes de ir. Si no hay nadie, volvemos en otro momento o se lo dejamos a un vecino, siempre avisándote antes.',
+  },
+  {
+    pregunta: '¿Repartís los domingos y festivos?',
+    respuesta: 'No, salvo en fechas señaladas. Al hacer el pedido verás qué días se puede elegir.',
+  },
+  {
+    pregunta: '¿Lleváis flores a los pueblos de alrededor?',
+    respuesta: `Sí, a los pueblos cercanos a Toledo. El precio depende de la distancia: escríbenos por WhatsApp al ${NEGOCIO.movil} o llámanos y te lo decimos.`,
+  },
+  {
+    pregunta: '¿Y si prefiero recogerlo?',
+    respuesta: `Recoger en la tienda es gratis. Te lo dejamos preparado en ${direccionCompleta()}.`,
+  },
+];
+
+const migas = [
+  { nombre: 'Inicio', ruta: '/' },
+  { nombre: 'Reparto a domicilio en Toledo', ruta: RUTA_REPARTO },
+];
+---
+
+<Base
+  titulo="Reparto de flores a domicilio en Toledo"
+  descripcion={`Llevamos ramos, plantas y centros a domicilio en Toledo por ${euros(zonas[0]?.precio ?? 8)}, y a los pueblos cercanos según la distancia. Hechos a mano en el Polígono. Recogida gratis en la tienda.`}
+  jsonLd={[jsonLdFloristeria(), jsonLdMigas(migas), jsonLdPreguntas(preguntas)]}
+>
+  <div class="envoltura cabeza-pagina">
+    <Migas migas={migas} />
+    <h1>Reparto de flores a domicilio en Toledo</h1>
+    <p class="entrada">Preparamos tu ramo, tu planta o tu centro en la tienda del Polígono y te lo llevamos a casa, al trabajo o al hospital.</p>
+    <div class="botones acciones">
+      <a class="boton" href={RUTA_TIENDA}>Ver flores y plantas</a>
+      <a class="boton wa" href={enlaceWhatsApp(`${SALUDO_WHATSAPP}. Es para repartir a domicilio.`)} rel="noopener"><Icono nombre="whatsapp" /> Preguntar por WhatsApp</a>
+    </div>
+  </div>
+
+  <section class="seccion" aria-labelledby="t-precios">
+    <div class="envoltura">
+      <div class="prosa">
+        <h2 id="t-precios">Dónde repartimos y cuánto cuesta</h2>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Entrega</th>
+              <th scope="col">Precio</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Recoger en la tienda ({NEGOCIO.direccion.calle})</th>
+              <td data-etiqueta="Precio">Gratis</td>
+            </tr>
+            {
+              zonas.map((z) => (
+                <tr>
+                  <th scope="row">
+                    {z.nombre} (códigos postales {z.cps[0]} a {z.cps[z.cps.length - 1]})
+                  </th>
+                  <td data-etiqueta="Precio">{z.precio != null ? euros(z.precio) : 'Pregúntanos'}</td>
+                </tr>
+              ))
+            }
+            <tr>
+              <th scope="row">
+                <a href={RUTA_HOSPITAL}>Hospital Universitario de Toledo</a>
+              </th>
+              <td data-etiqueta="Precio">{euros(TIENDA.entrega.hospital.precio)}</td>
+            </tr>
+            <tr>
+              <th scope="row">Pueblos cercanos (Layos, Cabañas…)</th>
+              <td data-etiqueta="Precio">Según la distancia: pregúntanos</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Los precios llevan el IVA incluido. Verás el importe del reparto antes de pagar.</p>
+
+        <h2>Cuándo repartimos</h2>
+        <p>En el horario de la tienda: {horarioEnTexto}.</p>
+        <ul>
+          <li><strong>Para el mismo día:</strong> pide antes de las {horaLimite}. Si es más tarde, llámanos: si da tiempo, lo llevamos.</li>
+          <li><strong>Sin franjas horarias.</strong> Si lo necesitas a una hora concreta, llámanos antes de hacer el pedido.</li>
+          <li><strong>Domingos y festivos:</strong> no repartimos, salvo en fechas señaladas.</li>
+        </ul>
+
+        <h2>Si no hay nadie en casa</h2>
+        <p>Llamamos antes de ir. Si no hay nadie, volvemos en otro momento o se lo dejamos a un vecino, siempre avisándote antes.</p>
+
+        <h2>Encargos por teléfono</h2>
+        <p>
+          Si prefieres hablar con la tienda, llama al <a href={enlaceTelefono(NEGOCIO.telefono)}>{NEGOCIO.telefono}</a> o escribe por WhatsApp al{' '}
+          <a href={enlaceWhatsApp()} rel="noopener">{NEGOCIO.movil}</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="t-preguntas">
+    <div class="envoltura">
+      <h2 id="t-preguntas" class="titulo">Preguntas frecuentes</h2>
+      <Preguntas preguntas={preguntas} />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .acciones { margin-top: 26px; }
+  .titulo { font-size: clamp(1.6rem, 3.8vw, 2.2rem); margin-bottom: 0.9em; }
+  .prosa tbody th { font-weight: 400; }
+</style>

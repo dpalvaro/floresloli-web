@@ -1,0 +1,59 @@
+---
+import FotoProducto from './FotoProducto.astro';
+import type { Producto } from '../../compartido/catalogo.ts';
+import { rutaProducto } from '../../compartido/catalogo.ts';
+import { ENTORNO } from '../lib/entorno.ts';
+import { etiquetaDePrueba, textoPrecio } from '../lib/precios.ts';
+
+interface Props {
+  producto: Producto;
+  /** Nivel del titular: 2 si la rejilla cuelga de un h1, 3 si cuelga de un h2. */
+  nivel?: 2 | 3;
+  principal?: boolean;
+}
+
+const { producto: p, nivel = 3, principal = false } = Astro.props;
+const Titular = `h${nivel}` as 'h2' | 'h3';
+const precio = textoPrecio(p, ENTORNO);
+const prueba = etiquetaDePrueba(p, ENTORNO);
+---
+
+<li class="tarjeta">
+  <a href={rutaProducto(p)}>
+    <div class="marco">
+      <FotoProducto producto={p} alt="" principal={principal} />
+      {prueba && <span class="etiqueta ambar prueba">{prueba}</span>}
+    </div>
+    <Titular class="nombre">{p.nombre}</Titular>
+    <p class="resumen">{p.resumen}</p>
+    <p class="precio">
+      <span class:list={{ 'sin-precio': precio.sinPrecio && !p.aMedida }}>{precio.texto}</span>
+      {p.temporada && <span class="temporada">{p.temporada.texto}</span>}
+    </p>
+  </a>
+</li>
+
+<style>
+  .tarjeta a { display: block; color: inherit; text-decoration: none; }
+  .marco { margin-bottom: 12px; }
+  .prueba { position: absolute; left: 8px; top: 8px; }
+  .nombre { font: 600 1.05rem/1.25 var(--sans); letter-spacing: 0; color: var(--violeta-osc); margin-bottom: 4px; }
+  .tarjeta a:hover .nombre { text-decoration: underline; text-underline-offset: 0.18em; text-decoration-thickness: 2px; }
+  .resumen {
+    color: var(--gris);
+    font-size: 0.92rem;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .precio { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; font-weight: 600; margin: 0; }
+  .sin-precio { font-weight: 400; color: var(--gris); font-size: 0.95rem; }
+  .temporada { font-weight: 400; font-size: 0.86rem; color: var(--gris); }
+  @media (min-width: 720px) {
+    .nombre { font-size: 1.15rem; }
+  }
+</style>

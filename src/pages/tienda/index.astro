@@ -1,0 +1,70 @@
+---
+import Base from '../../layouts/Base.astro';
+import ComoLlega from '../../components/ComoLlega.astro';
+import Migas from '../../components/Migas.astro';
+import TarjetaProducto from '../../components/TarjetaProducto.astro';
+import { productosDeCategoria, rutaCategoria } from '../../../compartido/catalogo.ts';
+import { ENTORNO } from '../../lib/entorno.ts';
+import { RUTA_TIENDA, categoriasConPagina } from '../../lib/rutas.ts';
+import { jsonLdMigas } from '../../lib/seo.ts';
+
+const categorias = categoriasConPagina();
+const migas = [
+  { nombre: 'Inicio', ruta: '/' },
+  { nombre: 'Flores y plantas', ruta: RUTA_TIENDA },
+];
+---
+
+<Base
+  titulo="Flores y plantas en Toledo: ramos, centros y plantas"
+  descripcion="Todo el catálogo de Flores y Plantas Loli: ramos de flor fresca, rosas, plantas, centros y coronas, hechos a mano en el Polígono de Toledo. Recogida en tienda y reparto en Toledo."
+  jsonLd={[jsonLdMigas(migas)]}
+>
+  <div class="envoltura cabeza-pagina">
+    <Migas migas={migas} />
+    <h1>Flores y plantas</h1>
+    <p class="entrada">Todo se prepara a mano en la tienda del Polígono. Elige y dinos cuándo lo quieres: lo recoges o te lo llevamos.</p>
+    <ul class="enlaces-relacionados indice" aria-label="Categorías">
+      {
+        categorias.map((c) => (
+          <li>
+            <a href={`#${c.slug}`}>{c.nombre}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  {
+    categorias.map((c, i) => (
+      <section class="seccion" aria-labelledby={`t-${c.slug}`} id={c.slug}>
+        <div class="envoltura">
+          <div class="cabeza-seccion">
+            <div>
+              <h2 id={`t-${c.slug}`}>{c.nombre}</h2>
+              <p>{c.intro}</p>
+            </div>
+            <a class="enlace-mas" href={rutaCategoria(c)}>
+              Ver {c.nombre.toLowerCase()}
+            </a>
+          </div>
+          <ul class="rejilla-productos">
+            {productosDeCategoria(c.id, ENTORNO).map((p, j) => (
+              <TarjetaProducto producto={p} principal={i === 0 && j < 2} />
+            ))}
+          </ul>
+        </div>
+      </section>
+    ))
+  }
+
+  <section class="seccion">
+    <div class="envoltura">
+      <ComoLlega />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .indice { margin-top: 24px; }
+</style>

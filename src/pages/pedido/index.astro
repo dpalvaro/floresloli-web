@@ -1,0 +1,329 @@
+---
+/*
+ * La cesta y el pedido, en una sola página.
+ *
+ * Si la tienda puede cobrar (base de datos + Stripe configurados y todos los productos de la
+ * cesta con precio), el botón lleva a la página de pago. Si no, el mismo formulario escribe el
+ * encargo y lo abre en WhatsApp. Lo decide src/scripts/pedido.ts preguntando a /api/estado.
+ */
+import Base from '../../layouts/Base.astro';
+import Icono from '../../components/Icono.astro';
+import { catalogoCompra, complementos, euros } from '../../../compartido/catalogo.ts';
+import { NEGOCIO, direccionCompleta, enlaceTelefono } from '../../../compartido/negocio.ts';
+import { TIENDA } from '../../../compartido/tienda.ts';
+import { ENTORNO } from '../../lib/entorno.ts';
+import { RUTA_HOSPITAL, RUTA_REPARTO, RUTA_TIENDA } from '../../lib/rutas.ts';
+
+/* Lo que el navegador necesita para calcular importes: nunca lleva precios sin confirmar. */
+const datos = {
+  catalogo: catalogoCompra(ENTORNO),
+  complementos: complementos(ENTORNO).map((p) => p.id),
+};
+const aTexto = (dato: unknown) => JSON.stringify(dato).replace(/</g, '\\u003c');
+
+const zonaToledo = TIENDA.entrega.domicilio.zonas[0];
+const L = TIENDA.limites;
+---
+
+<Base titulo="Tu cesta y tu pedido" descripcion={`Revisa tu cesta y haz tu pedido en ${NEGOCIO.nombre}.`} noindex>
+  <div class="envoltura pedido">
+    <p class="volver"><a href={RUTA_TIENDA}>← Seguir mirando flores y plantas</a></p>
+    <h1>Tu pedido</h1>
+
+    <div class="aviso ambar" data-cancelado role="status" hidden>
+      <p><strong>No se ha cobrado nada.</strong> El pago no llegó a hacerse. Tu pedido sigue aquí: revísalo y vuelve a intentarlo cuando quieras.</p>
+    </div>
+
+    <noscript>
+      <div class="aviso">
+        <p>
+          Para hacer el pedido desde la web hace falta tener JavaScript activado. También puedes llamar al
+          <a href={enlaceTelefono(NEGOCIO.telefono)}>{NEGOCIO.telefono}</a>.
+        </p>
+      </div>
+    </noscript>
+
+    <div class="vacia" data-vacia hidden>
+      <p class="entrada">Tu cesta está vacía.</p>
+      <div class="botones">
+        <a class="boton grande" href={RUTA_TIENDA}>Ver flores y plantas</a>
+        <a class="boton linea grande" href={enlaceTelefono(NEGOCIO.telefono)}><Icono nombre="telefono" /> {NEGOCIO.telefono}</a>
+      </div>
+    </div>
+
+    <div class="aviso bien enviado" data-enviado role="status" tabindex="-1" hidden>
+      <p><strong>Se ha abierto WhatsApp con tu encargo escrito.</strong> Pulsa «Enviar» allí y te contestamos con el precio y la confirmación.</p>
+      <p>¿No se ha abierto? <a href="#" data-enlace-whatsapp rel="noopener">Abrir WhatsApp otra vez</a> o llama al <a href={enlaceTelefono(NEGOCIO.telefono)}>{NEGOCIO.telefono}</a>.</p>
+      <p><button type="button" class="enlace-boton" data-vaciar>Ya lo he enviado: vaciar la cesta</button></p>
+    </div>
+
+    <form class="formulario" data-pedido novalidate hidden>
+      <div class="rejilla">
+        <div class="pasos">
+          <section class="bloque" aria-labelledby="t-cesta">
+            <h2 id="t-cesta">Tu cesta</h2>
+            <ul class="lineas" data-lineas></ul>
+            <p class="error" data-error-de="lineas" role="alert" hidden></p>
+            <div class="extras" data-complementos hidden>
+              <h3>¿Añadimos un detalle?</h3>
+              <ul data-lista-complementos></ul>
+            </div>
+          </section>
+
+          <section class="bloque" aria-labelledby="t-entrega">
+            <h2 id="t-entrega">Cómo lo quieres recibir</h2>
+            <fieldset class="campo">
+              <legend class="solo-lectores">Forma de entrega</legend>
+              <div class="opciones">
+                <label class="opcion">
+                  <input type="radio" name="metodo" value="recogida" data-campo="entrega.metodo" />
+                  <span class="nombre">{TIENDA.entrega.recogida.nombre}</span>
+                  <span class="precio">Gratis</span>
+                  <span class="nota">{direccionCompleta()}</span>
+                </label>
+                <label class="opcion">
+                  <input type="radio" name="metodo" value="domicilio" />
+                  <span class="nombre">{TIENDA.entrega.domicilio.nombre}</span>
+                  <span class="precio">{zonaToledo?.precio != null ? euros(zonaToledo.precio) : ''}</span>
+                  <span class="nota">En Toledo capital. A los pueblos cercanos, según la distancia. <a href={RUTA_REPARTO} target="_blank" rel="noopener">Ver el reparto</a></span>
+                </label>
+                <label class="opcion" data-opcion-hospital>
+                  <input type="radio" name="metodo" value="hospital" />
+                  <span class="nombre">{TIENDA.entrega.hospital.nombre}</span>
+                  <span class="precio">{euros(TIENDA.entrega.hospital.precio)}</span>
+                  <span class="nota" data-nota-hospital>Estamos en el mismo barrio. <a href={RUTA_HOSPITAL} target="_blank" rel="noopener">Cómo funciona</a></span>
+                </label>
+              </div>
+              <p class="error" data-error-de="entrega.metodo" role="alert" hidden></p>
+            </fieldset>
+
+            <div class="campo">
+              <label for="fecha">¿Para qué día?</label>
+              <select id="fecha" name="fecha" data-campo="entrega.fecha" aria-describedby="ayuda-fecha"></select>
+              <p class="ayuda" id="ayuda-fecha" data-ayuda-fecha></p>
+              <p class="error" data-error-de="entrega.fecha" role="alert" hidden></p>
+            </div>
+          </section>
+
+          <section class="bloque" aria-labelledby="t-destino" data-solo="domicilio" hidden>
+            <h2 id="t-destino">Dónde lo llevamos</h2>
+            <div class="campo">
+              <label for="destNombre">Nombre de quien lo recibe</label>
+              <input id="destNombre" name="destNombre" type="text" maxlength="80" autocomplete="off" data-campo="destinatario.nombre" />
+              <p class="error" data-error-de="destinatario.nombre" role="alert" hidden></p>
+            </div>
+            <div class="campo">
+              <label for="calle">Calle, número y piso</label>
+              <input id="calle" name="calle" type="text" maxlength="140" autocomplete="off" data-campo="direccion.calle" />
+              <p class="error" data-error-de="direccion.calle" role="alert" hidden></p>
+            </div>
+            <div class="fila-campos cp">
+              <div class="campo">
+                <label for="cp">Código postal</label>
+                <input id="cp" name="cp" type="text" inputmode="numeric" maxlength="5" autocomplete="off" data-campo="direccion.cp" aria-describedby="ayuda-cp" />
+              </div>
+              <div class="campo">
+                <label for="localidad">Localidad</label>
+                <input id="localidad" name="localidad" type="text" maxlength="60" autocomplete="off" />
+              </div>
+            </div>
+            <p class="ayuda zona" id="ayuda-cp" data-ayuda-cp></p>
+            <p class="error" data-error-de="direccion.cp" role="alert" hidden></p>
+            <div class="campo">
+              <label for="destTelefono">Teléfono de quien lo recibe <span class="opcional">(opcional)</span></label>
+              <input id="destTelefono" name="destTelefono" type="tel" inputmode="tel" maxlength="25" autocomplete="off" data-campo="destinatario.telefono" aria-describedby="ayuda-dest-tel" />
+              <p class="ayuda" id="ayuda-dest-tel">Solo para avisar si no hay nadie en casa. Si es una sorpresa, déjalo en blanco.</p>
+              <p class="error" data-error-de="destinatario.telefono" role="alert" hidden></p>
+            </div>
+            <div class="campo">
+              <label for="entregaNota">Indicaciones para la entrega <span class="opcional">(opcional)</span></label>
+              <input id="entregaNota" name="entregaNota" type="text" maxlength="120" autocomplete="off" aria-describedby="ayuda-nota" />
+              <p class="ayuda" id="ayuda-nota">Portal, timbre o a qué hora suele haber alguien.</p>
+            </div>
+          </section>
+
+          <section class="bloque" aria-labelledby="t-hospital" data-solo="hospital" hidden>
+            <h2 id="t-hospital">Para quién es</h2>
+            <div class="campo">
+              <label for="hospNombre">Nombre y apellidos de la persona ingresada</label>
+              <input id="hospNombre" name="hospNombre" type="text" maxlength="80" autocomplete="off" data-campo="destinatario.nombre" />
+              <p class="error" data-error-de="destinatario.nombre" role="alert" hidden></p>
+            </div>
+            <div class="campo">
+              <label for="hospDetalle">Planta y habitación <span class="opcional">(si las sabes)</span></label>
+              <input id="hospDetalle" name="hospDetalle" type="text" maxlength="120" autocomplete="off" />
+            </div>
+            <p class="aviso">Cada unidad del hospital tiene sus normas y algunas no admiten flores ni plantas. Si no lo sabes, pregúntalo en el control de la planta antes de encargar.</p>
+          </section>
+
+          <section class="bloque" aria-labelledby="t-tarjeta">
+            <h2 id="t-tarjeta">La tarjeta</h2>
+            <div class="campo">
+              <label for="dedicatoria">Dedicatoria <span class="opcional">(opcional)</span></label>
+              <textarea id="dedicatoria" name="dedicatoria" rows="3" maxlength={L.dedicatoria} aria-describedby="ayuda-dedicatoria"></textarea>
+              <p class="ayuda" id="ayuda-dedicatoria">
+                La escribimos a mano en una tarjeta. Si no quieres tarjeta, déjalo en blanco.
+                <span data-cuenta-dedicatoria></span>
+              </p>
+            </div>
+          </section>
+
+          <section class="bloque" aria-labelledby="t-datos">
+            <h2 id="t-datos">Tus datos</h2>
+            <div class="campo">
+              <label for="nombre">Tu nombre</label>
+              <input id="nombre" name="nombre" type="text" maxlength="80" autocomplete="name" data-campo="comprador.nombre" />
+              <p class="error" data-error-de="comprador.nombre" role="alert" hidden></p>
+            </div>
+            <div class="fila-campos" data-solo-modo="pago">
+              <div class="campo">
+                <label for="telefono">Tu teléfono</label>
+                <input id="telefono" name="telefono" type="tel" inputmode="tel" maxlength="25" autocomplete="tel" data-campo="comprador.telefono" aria-describedby="ayuda-telefono" />
+                <p class="ayuda" id="ayuda-telefono">Por si hay que consultarte algo del pedido.</p>
+                <p class="error" data-error-de="comprador.telefono" role="alert" hidden></p>
+              </div>
+              <div class="campo">
+                <label for="email">Tu correo</label>
+                <input id="email" name="email" type="email" maxlength="120" autocomplete="email" data-campo="comprador.email" aria-describedby="ayuda-email" />
+                <p class="ayuda" id="ayuda-email">Ahí te llega el justificante del pago.</p>
+                <p class="error" data-error-de="comprador.email" role="alert" hidden></p>
+              </div>
+            </div>
+            <div class="campo">
+              <label for="observaciones">¿Algo más que debamos saber? <span class="opcional">(opcional)</span></label>
+              <textarea id="observaciones" name="observaciones" rows="2" maxlength={L.observaciones}></textarea>
+            </div>
+            <div class="trampa" aria-hidden="true">
+              <label for="web">No rellenes este campo</label>
+              <input id="web" name="web" type="text" tabindex="-1" autocomplete="off" />
+            </div>
+          </section>
+        </div>
+
+        <aside class="resumen" aria-labelledby="t-resumen">
+          <h2 id="t-resumen">Resumen</h2>
+          <dl class="importes">
+            <div>
+              <dt>Productos</dt>
+              <dd data-subtotal></dd>
+            </div>
+            <div>
+              <dt data-rotulo-envio>Entrega</dt>
+              <dd data-envio></dd>
+            </div>
+            <div class="total">
+              <dt>Total</dt>
+              <dd data-total></dd>
+            </div>
+          </dl>
+          <p class="iva" data-iva>IVA incluido</p>
+
+          <fieldset class="campo forma-pago" data-forma-pago hidden>
+            <legend>¿Cómo lo pagas?</legend>
+            <label class="casilla"><input type="radio" name="pago" value="ahora" checked /> <span>Ahora, con tarjeta</span></label>
+            <label class="casilla"><input type="radio" name="pago" value="tienda" /> <span>Al recogerlo en la tienda</span></label>
+          </fieldset>
+
+          <div class="campo" data-solo-modo="pago">
+            <label class="casilla">
+              <input type="checkbox" name="acepta" data-campo="acepta" />
+              <span>
+                He leído y acepto las <a href="/condiciones-de-venta/" target="_blank" rel="noopener">condiciones de venta</a> y la
+                <a href="/privacidad/" target="_blank" rel="noopener">política de privacidad</a>.
+              </span>
+            </label>
+            <p class="error" data-error-de="acepta" role="alert" hidden></p>
+          </div>
+
+          <p class="aviso error" data-fallo role="alert" hidden></p>
+
+          <button class="boton grande ancho" type="submit" data-enviar>Hacer el pedido</button>
+          <p class="nota-pago" data-nota-pago></p>
+          <p class="privacidad-resumen">
+            Responsable: {NEGOCIO.legal.titular}. Usamos tus datos solo para preparar y entregar este pedido. Más información en la
+            <a href="/privacidad/" target="_blank" rel="noopener">política de privacidad</a>.
+          </p>
+        </aside>
+      </div>
+    </form>
+  </div>
+
+  <script type="application/json" id="datos-pedido" is:inline set:html={aTexto(datos)} />
+  <script>
+    import '../../scripts/pedido.ts';
+  </script>
+</Base>
+
+<style>
+  .pedido { padding-block: clamp(24px, 4vw, 44px) var(--hueco-seccion); }
+  .volver { font-size: 0.95rem; margin-bottom: 14px; }
+  h1 { font-size: clamp(2rem, 5.4vw, 3rem); margin-bottom: 0.5em; }
+  .vacia .entrada { margin-bottom: 1.2em; }
+  .enviado { margin-bottom: 24px; }
+
+  .rejilla { display: grid; gap: 28px; }
+  .bloque { padding: 22px 0 6px; border-top: 1px solid var(--linea); }
+  .bloque:first-child { border-top: 0; padding-top: 0; }
+  .bloque h2, .resumen h2 { font-size: clamp(1.4rem, 3.4vw, 1.75rem); margin-bottom: 0.7em; }
+  .bloque h3 { font: 600 1rem/1.3 var(--sans); letter-spacing: 0; margin-bottom: 10px; }
+  .opcion .nota a { white-space: nowrap; }
+  .zona { margin: -8px 0 16px; }
+  .zona[data-tipo='bien'] { color: var(--verde); font-weight: 600; }
+  .zona[data-tipo='aviso'] { color: #6b5200; }
+
+  .lineas { list-style: none; margin: 0 0 8px; padding: 0; }
+  .lineas :global(.linea) {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 14px;
+    align-items: start;
+    margin: 0;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--linea);
+  }
+  .lineas :global(.linea:first-child) { padding-top: 0; }
+  .lineas :global(.linea-nombre) { font-weight: 600; color: var(--violeta-osc); text-decoration: none; }
+  .lineas :global(a.linea-nombre:hover) { text-decoration: underline; }
+  .lineas :global(.linea-detalle) { display: block; color: var(--gris); font-size: 0.92rem; }
+  .lineas :global(.linea-precio) { font-weight: 600; text-align: right; white-space: nowrap; }
+  .lineas :global(.linea-precio.sin) { font-weight: 400; color: var(--gris); font-size: 0.9rem; white-space: normal; max-width: 9em; }
+  .lineas :global(.linea-acciones) { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; }
+  .lineas :global(.cantidad) { display: inline-flex; align-items: center; border: 1.5px solid #b9b4c9; border-radius: 999px; background: var(--blanco); height: 44px; }
+  .lineas :global(.cantidad button) { width: 44px; height: 100%; border: 0; background: none; color: var(--violeta-osc); font: 600 1.25rem/1 var(--sans); cursor: pointer; border-radius: 999px; }
+  .lineas :global(.cantidad button:hover) { background: var(--violeta-claro); }
+  .lineas :global(.cantidad output) { min-width: 28px; text-align: center; font-weight: 600; }
+  .lineas :global(.quitar) { font-size: 0.92rem; min-height: 44px; }
+  .lineas :global(.linea-error) { grid-column: 1 / -1; color: var(--rojo); font-size: 0.92rem; font-weight: 600; margin: 0; }
+
+  .extras { margin: 18px 0 12px; }
+  .extras ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .extras :global(li) { margin: 0; }
+  .extras :global(button) {
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--linea);
+    background: var(--blanco);
+    color: var(--violeta-osc);
+    font: 600 0.94rem/1.2 var(--sans);
+    cursor: pointer;
+  }
+  .extras :global(button:hover) { border-color: var(--violeta); background: var(--violeta-claro); }
+
+  .resumen { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 22px 20px; }
+  .importes { margin: 0 0 4px; display: grid; gap: 8px; }
+  .importes > div { display: flex; justify-content: space-between; gap: 16px; }
+  .importes dd { margin: 0; text-align: right; }
+  .importes .total { padding-top: 10px; border-top: 1px solid var(--linea); font-weight: 600; font-size: 1.2rem; color: var(--violeta-osc); }
+  .iva { color: var(--gris); font-size: 0.86rem; text-align: right; margin-bottom: 18px; }
+  .forma-pago legend { margin-bottom: 8px; }
+  .forma-pago .casilla { margin-bottom: 8px; }
+  .resumen .aviso { margin-bottom: 14px; }
+  .nota-pago { margin-top: 12px; color: var(--gris); font-size: 0.9rem; }
+  .privacidad-resumen { margin-top: 12px; color: var(--gris); font-size: 0.82rem; line-height: 1.45; }
+
+  @media (min-width: 900px) {
+    .rejilla { grid-template-columns: minmax(0, 1fr) 380px; gap: 56px; align-items: start; }
+    .resumen { position: sticky; top: calc(var(--cabecera) + 28px); }
+  }
+</style>

@@ -1,0 +1,29 @@
+{
+  "name": "floresloli-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Web y tienda online de Flores y Plantas Loli (Toledo). Astro + Cloudflare Pages Functions + D1 + Stripe.",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "build:produccion": "ENTORNO=produccion astro build",
+    "api": "wrangler pages dev dist --d1 DB=floresloli-local --compatibility-date=2026-10-01 --port 8788 --show-interactive-dev-session=false",
+    "local": "npm run build && npm run api",
+    "comprobar": "node --experimental-strip-types herramientas/comprobar.mjs",
+    "test": "node --experimental-strip-types --test \"pruebas/*.test.ts\"",
+    "prueba:compra": "node --experimental-strip-types herramientas/prueba-compra.mjs",
+    "tipos": "tsc --noEmit && tsc --noEmit -p functions/tsconfig.json",
+    "imagenes": "node --experimental-strip-types herramientas/imagenes-sociales.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261110.1",
+    "astro": "^7.4.8",
+    "sharp": "^0.35.5",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.159.0"
+  }
+}

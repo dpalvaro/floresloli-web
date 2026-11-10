@@ -1,0 +1,128 @@
+---
+import { Picture } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Icono from '../components/Icono.astro';
+import Migas from '../components/Migas.astro';
+import { NEGOCIO, direccionCompleta, enlaceComoLlegar, enlaceMapa, enlaceTelefono, enlaceWhatsApp, horarioParaMostrar } from '../../compartido/negocio.ts';
+import { foto } from '../lib/imagenes.ts';
+import { RUTA_CONTACTO, RUTA_EVENTOS, RUTA_HOSPITAL, RUTA_REPARTO, RUTA_TIENDA } from '../lib/rutas.ts';
+import { jsonLdFloristeria, jsonLdMigas } from '../lib/seo.ts';
+
+const horario = horarioParaMostrar();
+const fachada = foto('fachada')!;
+const migas = [
+  { nombre: 'Inicio', ruta: '/' },
+  { nombre: 'Dónde estamos', ruta: RUTA_CONTACTO },
+];
+---
+
+<Base
+  titulo="Floristería en el Polígono de Toledo: dónde estamos y horario"
+  descripcion={`Flores y Plantas Loli está en la calle Río Alberche, 30, en el Polígono de Toledo (Santa María de Benquerencia). Horario, teléfono ${NEGOCIO.telefono}, WhatsApp y cómo llegar.`}
+  jsonLd={[jsonLdFloristeria(['/social/portada.jpg']), jsonLdMigas(migas)]}
+>
+  <div class="envoltura cabeza-pagina">
+    <Migas migas={migas} />
+    <h1>La floristería del Polígono</h1>
+    <p class="entrada">
+      {NEGOCIO.nombre} está en la calle Río Alberche, en el barrio de {NEGOCIO.direccion.barrioOficial}, el mismo del Hospital Universitario de Toledo.
+    </p>
+  </div>
+
+  <section class="seccion">
+    <div class="envoltura rejilla">
+      <div>
+        <dl class="datos">
+          <div>
+            <dt>Dirección</dt>
+            <dd>
+              {direccionCompleta()}
+              <br />
+              {NEGOCIO.direccion.barrio} ({NEGOCIO.direccion.barrioOficial})
+            </dd>
+          </div>
+          <div>
+            <dt>Horario</dt>
+            <dd>
+              <p class="apertura" data-apertura></p>
+              <table class="horario">
+                <tbody>
+                  {
+                    horario.map((fila) => (
+                      <tr>
+                        <th scope="row">{fila.dias}</th>
+                        <td>{fila.horas.join(' y ')}</td>
+                      </tr>
+                    ))
+                  }
+                </tbody>
+              </table>
+            </dd>
+          </div>
+          <div>
+            <dt>Teléfono</dt>
+            <dd><a href={enlaceTelefono(NEGOCIO.telefono)}>{NEGOCIO.telefono}</a></dd>
+          </div>
+          <div>
+            <dt>Móvil y WhatsApp de pedidos</dt>
+            <dd><a href={enlaceWhatsApp()} rel="noopener">{NEGOCIO.movil}</a></dd>
+          </div>
+          <div>
+            <dt>Correo</dt>
+            <dd><a href={`mailto:${NEGOCIO.correo}`}>{NEGOCIO.correo}</a></dd>
+          </div>
+        </dl>
+
+        <div class="botones acciones">
+          <a class="boton" href={enlaceComoLlegar()} rel="noopener"><Icono nombre="mapa" /> Cómo llegar</a>
+          <a class="boton wa" href={enlaceWhatsApp()} rel="noopener"><Icono nombre="whatsapp" /> WhatsApp</a>
+          <a class="boton linea" href={enlaceTelefono(NEGOCIO.telefono)}><Icono nombre="telefono" /> Llamar</a>
+        </div>
+        <p class="mapa"><a href={enlaceMapa()} rel="noopener">Ver la tienda en Google Maps</a></p>
+      </div>
+
+      <div class="marco foto">
+        <Picture
+          src={fachada}
+          alt="Fachada de Flores y Plantas Loli, con el rótulo lima, el toldo y las plantas en la acera"
+          widths={[480, 720, 1000, 1400]}
+          sizes="(min-width: 900px) 560px, 92vw"
+          formats={['webp']}
+          fallbackFormat="jpg"
+          quality={70}
+          loading="eager"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="t-que">
+    <div class="envoltura">
+      <div class="prosa">
+        <h2 id="t-que">Qué encontrarás</h2>
+        <p>
+          Ramos de flor fresca, rosas, plantas de interior y de temporada, centros y coronas. Todo se prepara a mano en la tienda, a tu gusto y a tu
+          presupuesto, con una tarjeta para la dedicatoria si la quieres.
+        </p>
+        <ul>
+          <li><a href={RUTA_TIENDA}>Flores y plantas</a>: lo que puedes encargar desde la web.</li>
+          <li><a href={RUTA_REPARTO}>Reparto a domicilio en Toledo</a> y en los pueblos cercanos.</li>
+          <li><a href={RUTA_HOSPITAL}>Flores al Hospital Universitario de Toledo</a>, en el mismo barrio.</li>
+          <li><a href={RUTA_EVENTOS}>Bodas, comuniones y empresas</a>: te hacemos presupuesto.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .rejilla { display: grid; gap: 32px; }
+  .acciones { margin-top: 26px; }
+  .mapa { margin-top: 16px; }
+  .foto { aspect-ratio: 3 / 2; }
+  .apertura { font-weight: 600; color: var(--tinta); margin-bottom: 6px; min-height: 1.5em; }
+  .datos a { font-weight: 600; }
+  @media (min-width: 900px) {
+    .rejilla { grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+  }
+</style>

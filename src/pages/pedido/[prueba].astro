@@ -1,0 +1,44 @@
+---
+/*
+ * Pago de prueba. Esta página SOLO existe en las vistas de prueba: en la web pública
+ * no se genera (y la API que usa responde 404). Sirve para probar el pedido completo
+ * sin Stripe y sin dinero de por medio.
+ */
+import Base from '../../layouts/Base.astro';
+import { ES_PRUEBAS } from '../../lib/entorno.ts';
+
+export function getStaticPaths() {
+  return ES_PRUEBAS ? [{ params: { prueba: 'pago-de-prueba' } }] : [];
+}
+---
+
+<Base titulo="Pago de prueba" descripcion="Página de pago simulado para las vistas de prueba." noindex simple>
+  <div class="envoltura estrecha pago" data-pago-prueba>
+    <h1>Pago de prueba</h1>
+    <p class="entrada">
+      Aquí estaría la página de pago de Stripe. En las vistas de prueba el pago se simula: <strong>no se cobra nada</strong>.
+    </p>
+    <p class="referencia">Pedido <strong data-ref></strong></p>
+    <div class="caja" data-detalle></div>
+    <p class="aviso error" data-fallo role="alert" hidden></p>
+    <div class="botones">
+      <button class="boton grande" type="button" data-pagar disabled>Simular el pago</button>
+      <button class="boton linea grande" type="button" data-cancelar disabled>Cancelar y volver</button>
+    </div>
+  </div>
+
+  <script>
+    import '../../scripts/pago-de-prueba.ts';
+  </script>
+</Base>
+
+<style>
+  .pago { padding-block: clamp(36px, 7vw, 72px) var(--hueco-seccion); }
+  h1 { font-size: clamp(2rem, 5.4vw, 3rem); margin-bottom: 0.35em; }
+  .referencia { margin: 18px 0; }
+  .caja { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 20px; margin: 22px 0; }
+  .caja :global(.pedido-lineas) { list-style: none; margin: 0 0 18px; padding: 0; }
+  .caja :global(.pedido-lineas li) { display: flex; justify-content: space-between; gap: 16px; margin: 0; padding: 8px 0; border-bottom: 1px solid var(--linea); }
+  .caja :global(.pedido-lineas .importe) { white-space: nowrap; font-weight: 600; }
+  .caja :global(.pedido-lineas .total) { border-bottom: 0; font-weight: 600; font-size: 1.12rem; color: var(--violeta-osc); }
+</style>

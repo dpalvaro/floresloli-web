@@ -1,0 +1,114 @@
+---
+import PaginaLegal from '../components/PaginaLegal.astro';
+import { NEGOCIO, domicilioLegal } from '../../compartido/negocio.ts';
+import { TIENDA } from '../../compartido/tienda.ts';
+
+const L = NEGOCIO.legal;
+const diasDestinatario = TIENDA.privacidad.diasDatosDestinatario;
+const mesesPresupuestos = TIENDA.privacidad.mesesPresupuestos;
+---
+
+<PaginaLegal titulo="Política de privacidad" descripcion={`Qué datos personales trata ${NEGOCIO.nombre}, para qué, durante cuánto tiempo y cómo ejercer tus derechos.`} actualizado="10 de noviembre de 2026">
+  <h2>Quién es responsable de tus datos</h2>
+  <ul>
+    <li><strong>Responsable:</strong> {L.titular} ({NEGOCIO.nombre})</li>
+    {L.nif && <li><strong>NIF:</strong> {L.nif}</li>}
+    <li><strong>Dirección:</strong> {domicilioLegal()}</li>
+    <li><strong>Correo:</strong> <a href={`mailto:${NEGOCIO.correo}`}>{NEGOCIO.correo}</a></li>
+    <li><strong>Teléfono:</strong> {NEGOCIO.telefono}</li>
+  </ul>
+
+  <h2>Qué datos se tratan y para qué</h2>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Cuándo</th>
+        <th scope="col">Qué datos</th>
+        <th scope="col">Para qué y con qué base legal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td data-etiqueta="Cuándo">Al hacer un pedido en la web</td>
+        <td data-etiqueta="Qué datos">Tu nombre, teléfono y correo; el nombre, el teléfono y la dirección de quien recibe las flores; la dedicatoria y las observaciones.</td>
+        <td data-etiqueta="Para qué y con qué base legal">Preparar, cobrar y entregar el pedido, y atenderte si hay algún problema. Base: la ejecución del contrato de compra. Los datos de facturación se conservan por obligación legal.</td>
+      </tr>
+      <tr>
+        <td data-etiqueta="Cuándo">Al pedir un presupuesto</td>
+        <td data-etiqueta="Qué datos">Tu nombre, teléfono, correo (si lo das) y lo que nos cuentes del evento.</td>
+        <td data-etiqueta="Para qué y con qué base legal">Contestarte y prepararte el presupuesto. Base: tu solicitud y tu consentimiento.</td>
+      </tr>
+      <tr>
+        <td data-etiqueta="Cuándo">Al llamar, escribir por WhatsApp o por correo</td>
+        <td data-etiqueta="Qué datos">Los que nos des en la conversación.</td>
+        <td data-etiqueta="Para qué y con qué base legal">Atender tu consulta o tu encargo. Base: tu solicitud.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>No se envía publicidad, no se elaboran perfiles y no se toman decisiones automatizadas con tus datos.</p>
+
+  <h2>Datos de la persona que recibe las flores</h2>
+  <p>
+    Para entregar un pedido necesitamos el nombre y la dirección de quien lo recibe. Si el pedido es para una persona ingresada en el hospital,
+    su nombre y, si los indicas, la planta y la habitación se usan únicamente para hacer la entrega. Solo los ve el personal de la tienda.
+  </p>
+  {
+    diasDestinatario !== null && (
+      <p>
+        Estos datos, las indicaciones de entrega, la dedicatoria y las observaciones <strong>se borran automáticamente a los {diasDestinatario} días de la entrega</strong>. Si das datos de otra
+        persona, asegúrate de que no le importa que los usemos para llevarle las flores.
+      </p>
+    )
+  }
+
+  <h2>El pago</h2>
+  <p>
+    El pago se hace en una página segura de Stripe. La tienda <strong>no ve ni guarda los datos de tu tarjeta</strong>: solo recibe la
+    confirmación de que el pago se ha hecho.
+  </p>
+
+  <h2>Cuánto tiempo se guardan</h2>
+  <ul>
+    <li><strong>Pedidos:</strong> tus datos como comprador y los importes, durante los plazos que exigen las leyes contables y fiscales (hasta seis años).</li>
+    {diasDestinatario !== null && <li><strong>Datos de quien recibe las flores, indicaciones de entrega, dedicatoria y observaciones:</strong> {diasDestinatario} días desde la entrega.</li>}
+    {mesesPresupuestos !== null && <li><strong>Solicitudes de presupuesto:</strong> {mesesPresupuestos} meses desde la solicitud.</li>}
+    <li><strong>Pedidos que no llegan a pagarse:</strong> se borran con el resto de datos de entrega, en el mismo plazo.</li>
+  </ul>
+
+  <h2>Quién más interviene</h2>
+  <p>Tus datos no se venden ni se ceden. Para que la tienda online funcione, intervienen estos proveedores, que actúan por encargo y solo para prestar su servicio:</p>
+  <ul>
+    <li><strong>Cloudflare</strong> (Cloudflare, Inc.): aloja la web y la base de datos de pedidos.</li>
+    <li><strong>Stripe</strong> (Stripe Payments Europe, Ltd., Irlanda): procesa el pago y manda el justificante.</li>
+    <li><strong>Resend</strong> (Plus Five Five, Inc.): envía los correos de confirmación del pedido, si este servicio está activado.</li>
+    <li><strong>impulsaDT</strong>: mantiene la web por encargo de la tienda.</li>
+  </ul>
+  <p>
+    Algunos de estos proveedores pueden tratar datos fuera del Espacio Económico Europeo. En ese caso lo hacen con las garantías que exige el
+    Reglamento General de Protección de Datos (Marco de Privacidad de Datos UE-EE. UU. o cláusulas contractuales tipo).
+  </p>
+  <p>Si nos escribes por WhatsApp, esa conversación pasa además por los servidores de WhatsApp, con sus propias condiciones.</p>
+  <p>Los datos también pueden comunicarse a la Administración o a los juzgados cuando la ley obligue a ello.</p>
+
+  <h2>Tus derechos</h2>
+  <p>
+    Puedes pedir en cualquier momento ver tus datos, corregirlos, borrarlos, limitar su uso, oponerte a él o llevártelos a otro sitio. Si diste tu
+    consentimiento, puedes retirarlo cuando quieras. Escribe a <a href={`mailto:${NEGOCIO.correo}`}>{NEGOCIO.correo}</a> o pásate por la tienda;
+    te contestaremos en un mes como máximo.
+  </p>
+  <p>
+    Si crees que tus datos no se han tratado bien, puedes reclamar ante la Agencia Española de Protección de Datos (<a href="https://www.aepd.es" rel="noopener">www.aepd.es</a>).
+  </p>
+
+  <h2>Menores</h2>
+  <p>La tienda online no está dirigida a menores de 14 años y no recoge sus datos a sabiendas.</p>
+
+  <h2>Seguridad</h2>
+  <p>
+    La web funciona siempre con conexión cifrada (HTTPS). El acceso a los pedidos está protegido con clave y limitado al personal de la tienda y a
+    quien mantiene la web.
+  </p>
+
+  <h2>Cookies</h2>
+  <p>La web solo guarda en tu navegador lo necesario para la cesta y el pedido. Está explicado en la <a href="/cookies/">política de cookies</a>.</p>
+</PaginaLegal>
