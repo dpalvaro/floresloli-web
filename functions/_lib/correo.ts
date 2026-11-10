@@ -72,17 +72,18 @@ function entregaEnTexto(p: FilaPedido): string {
   return partes.join('\n');
 }
 
-/** Aviso a la tienda y confirmación al cliente de un pedido ya pagado. */
+/** Aviso a la tienda y confirmación al cliente de un pedido de la web (pagado, o para pagar al recogerlo). */
 export async function avisarPedido(env: Env, p: FilaPedido, lineas: FilaLinea[], origen: string): Promise<void> {
   const total = eurosDeCentimos(p.total);
   const prueba = p.entorno === 'pruebas' ? '[PRUEBA] ' : '';
+  const pagado = p.pago_estado === 'pagado';
 
   await enviarCorreo(env, {
     para: env.CORREO_AVISOS || NEGOCIO.correo,
     asunto: `${prueba}Pedido web ${p.ref} para el ${fechaLarga(p.entrega_fecha)} · ${total}`,
     responderA: p.comprador_email || undefined,
     texto: [
-      `Pedido ${p.ref}, pagado en la web: ${total}.`,
+      pagado ? `Pedido ${p.ref}, pagado en la web: ${total}.` : `Pedido ${p.ref}, SIN PAGAR: ${total}. Se cobra al recogerlo en la tienda.`,
       lineasEnTexto(lineas),
       entregaEnTexto(p),
       p.dedicatoria ? `Dedicatoria:\n${p.dedicatoria}` : '',
@@ -101,7 +102,9 @@ export async function avisarPedido(env: Env, p: FilaPedido, lineas: FilaLinea[],
       responderA: NEGOCIO.correo,
       texto: [
         `Hola, ${p.comprador_nombre}:`,
-        `Hemos recibido tu pedido ${p.ref} y el pago de ${total}. Lo preparamos para el ${fechaLarga(p.entrega_fecha)}.`,
+        pagado
+          ? `Hemos recibido tu pedido ${p.ref} y el pago de ${total}. Lo preparamos para el ${fechaLarga(p.entrega_fecha)}.`
+          : `Hemos recibido tu pedido ${p.ref}. Lo preparamos para el ${fechaLarga(p.entrega_fecha)} y lo pagas al recogerlo en la tienda: ${total}.`,
         lineasEnTexto(lineas),
         entregaEnTexto(p),
         p.dedicatoria ? `Dedicatoria:\n${p.dedicatoria}` : '',

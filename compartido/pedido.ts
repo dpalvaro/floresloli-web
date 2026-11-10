@@ -234,6 +234,8 @@ export interface PedidoEntrada {
   web?: string;
   /** Pedido anterior sin pagar que este sustituye (el cliente volvió atrás desde el pago). */
   sustituye?: { ref: string; token: string } | null;
+  /** Pagar al recoger en la tienda. Solo se tiene en cuenta si TIENDA.pagoEnTienda está activado. */
+  pagoEnTienda?: boolean;
 }
 
 export interface PedidoValidado {

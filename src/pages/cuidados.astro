@@ -1,0 +1,159 @@
+---
+/* Consejos de cuidado. Contenido útil para el cliente y para los buscadores; nada de datos del negocio. */
+import Base from '../layouts/Base.astro';
+import Migas from '../components/Migas.astro';
+import Preguntas from '../components/Preguntas.astro';
+import { NEGOCIO, enlaceWhatsApp } from '../../compartido/negocio.ts';
+import { RUTA_CUIDADOS, RUTA_TIENDA, categoriasConPagina } from '../lib/rutas.ts';
+import { rutaCategoria } from '../../compartido/catalogo.ts';
+import { jsonLdMigas, jsonLdPreguntas } from '../lib/seo.ts';
+
+const migas = [
+  { nombre: 'Inicio', ruta: '/' },
+  { nombre: 'Cómo cuidar tus flores y plantas', ruta: RUTA_CUIDADOS },
+];
+
+const preguntas = [
+  {
+    pregunta: '¿Cuánto dura un ramo de flores?',
+    respuesta:
+      'Depende de la flor y de la época, pero con agua limpia y los tallos recién cortados lo normal es que aguante entre cinco y diez días. Los claveles, los crisantemos y los liliums son de los que más duran.',
+  },
+  {
+    pregunta: '¿Cada cuánto se cambia el agua del jarrón?',
+    respuesta: 'Cada dos días. Aprovecha para cortar un centímetro de tallo en diagonal y quitar las flores y las hojas que se hayan estropeado.',
+  },
+  {
+    pregunta: '¿Dónde pongo el ramo?',
+    respuesta: 'En un sitio fresco y con luz, pero sin sol directo. Lejos de radiadores, de corrientes de aire y del frutero: la fruta madura hace que las flores se pasen antes.',
+  },
+  {
+    pregunta: '¿Cómo se riega una orquídea?',
+    respuesta:
+      'Una vez por semana, más o menos. Mete la maceta en agua diez minutos, deja que escurra bien y devuélvela a su sitio. Si las raíces están verdes, todavía tiene agua; si están plateadas, toca regar.',
+  },
+  {
+    pregunta: '¿Los liliums son peligrosos para los gatos?',
+    respuesta: 'Sí. Los liliums (lirios) son tóxicos para los gatos, incluido el polen. Si hay gato en casa, es mejor elegir otra flor: dínoslo al hacer el pedido.',
+  },
+  {
+    pregunta: '¿Cómo se cuida un centro de flores?',
+    respuesta: 'Va pinchado en una esponja que guarda el agua. Añade un poco de agua cada dos días por un lado, sin mojar las flores, para que la esponja no se seque.',
+  },
+];
+
+const categorias = categoriasConPagina();
+---
+
+<Base
+  titulo="Cómo cuidar un ramo de flores y tus plantas"
+  descripcion="Consejos sencillos de una floristería de Toledo para que tu ramo dure más y tus plantas estén sanas: agua, luz, riego de la orquídea, la flor de pascua y más."
+  jsonLd={[jsonLdMigas(migas), jsonLdPreguntas(preguntas)]}
+>
+  <div class="envoltura cabeza-pagina">
+    <Migas migas={migas} />
+    <h1>Cómo cuidar tus flores y plantas</h1>
+    <p class="entrada">Con cuatro cuidados sencillos, un ramo dura bastantes días más y una planta, años. Esto es lo que contamos en el mostrador.</p>
+  </div>
+
+  <section class="seccion">
+    <div class="envoltura">
+      <div class="prosa">
+        <h2>Un ramo de flor fresca</h2>
+        <ol>
+          <li><strong>Corta los tallos.</strong> Uno o dos centímetros, en diagonal y con un cuchillo o unas tijeras que corten bien. Así beben mejor.</li>
+          <li><strong>Quita las hojas que queden bajo el agua.</strong> Si se quedan dentro, se pudren y ensucian el agua.</li>
+          <li><strong>Jarrón limpio y agua fresca.</strong> Hasta la mitad es suficiente. Si el ramo trae un sobre de alimento, échalo.</li>
+          <li><strong>Cambia el agua cada dos días</strong> y vuelve a cortar un poco los tallos.</li>
+          <li><strong>Búscale un buen sitio.</strong> Fresco, con luz y sin sol directo. Lejos de radiadores, de corrientes y de la fruta.</li>
+        </ol>
+
+        <h3>Rosas</h3>
+        <p>Les gusta el agua abundante y fresca. Si una rosa agacha la cabeza, corta el tallo dos dedos y métela en agua tibia un rato: suele recuperarse.</p>
+
+        <h3>Liliums</h3>
+        <p>
+          Llegan con capullos cerrados y se van abriendo en casa. Cuando se abran, puedes quitar con un papel las anteras, que son las puntas naranjas
+          del centro: así no manchan y la flor dura más. Ojo si tienes gato: los liliums son tóxicos para ellos.
+        </p>
+
+        <h3>Tulipanes</h3>
+        <p>Siguen creciendo en el jarrón y se inclinan buscando la luz. Ponles poca agua y muy fría, y gira el jarrón de vez en cuando.</p>
+
+        <h3>Girasoles y gerberas</h3>
+        <p>Tienen el tallo blando. Poca agua en el jarrón, de tres o cuatro dedos, y cambiarla a menudo.</p>
+
+        <h2>Un centro o una cesta</h2>
+        <p>
+          Las flores van pinchadas en una esponja que guarda el agua. No hace falta jarrón: se coloca tal cual llega. Cada dos días, añade un poco de
+          agua por un lado, despacio y sin mojar las flores.
+        </p>
+
+        <h2>Plantas de interior</h2>
+        <p>
+          La regla que más plantas salva: <strong>antes de regar, toca la tierra</strong>. Si está húmeda a un dedo de profundidad, espera. Se mueren
+          muchas más plantas por exceso de agua que por falta. Y que la maceta nunca tenga agua parada en el plato.
+        </p>
+
+        <h3>Orquídea</h3>
+        <p>
+          Mucha luz, sin sol directo. Riégala una vez por semana, más o menos: maceta en agua diez minutos y que escurra bien. Cuando se le caigan las
+          flores, no la tires: corta la vara por encima del segundo nudo y volverá a florecer.
+        </p>
+
+        <h3>Anturio y espatifilo</h3>
+        <p>
+          Aguantan bien dentro de casa y con poca luz. Riego moderado, una vez por semana, y un paño húmedo en las hojas de vez en cuando. Si el
+          espatifilo se queda lacio, es que tiene sed: se recupera en unas horas.
+        </p>
+
+        <h3>Kalanchoe y suculentas</h3>
+        <p>Mucha luz y poca agua: cada diez o quince días, y menos en invierno. Mejor quedarse corto que pasarse.</p>
+
+        <h2>Plantas de temporada</h2>
+        <h3>Flor de pascua</h3>
+        <p>
+          Luz, una temperatura suave y nada de corrientes ni de radiadores cerca. Riégala por abajo, poniendo agua en el plato un cuarto de hora y
+          retirando la que sobre, cuando la tierra esté seca.
+        </p>
+
+        <h3>Ciclamen</h3>
+        <p>Le gusta el fresco: una ventana luminosa, lejos de la calefacción. Riégalo también por el plato, sin mojar el centro de la planta.</p>
+
+        <h3>Crisantemo</h3>
+        <p>En maceta, al exterior o en una ventana fresca. Tierra siempre un poco húmeda y quitar las flores secas para que salgan más.</p>
+
+        <h2>Flor seca y rosa eterna</h2>
+        <p>No necesitan agua. Solo un sitio seco, sin sol directo, y quitarles el polvo con aire suave, sin tocarlas mucho.</p>
+
+        <p class="aviso">
+          ¿Tu planta no levanta cabeza? Mándanos una foto por <a href={enlaceWhatsApp('Hola, tengo una duda sobre cómo cuidar una planta.')} rel="noopener">WhatsApp</a>
+          o tráela a la tienda ({NEGOCIO.direccion.calle}) y la miramos.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="t-preguntas">
+    <div class="envoltura">
+      <h2 id="t-preguntas" class="titulo">Preguntas frecuentes</h2>
+      <Preguntas preguntas={preguntas} />
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="t-tienda">
+    <div class="envoltura">
+      <h2 id="t-tienda" class="titulo">En la tienda</h2>
+      <ul class="enlaces-relacionados">
+        <li><a href={RUTA_TIENDA}>Todo el catálogo</a></li>
+        {categorias.map((c) => <li><a href={rutaCategoria(c)}>{c.nombre}</a></li>)}
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .titulo { font-size: clamp(1.5rem, 3.4vw, 2rem); margin-bottom: 0.7em; }
+  .prosa ol { padding-left: 1.3em; }
+  .prosa .aviso { margin-top: 2em; }
+</style>

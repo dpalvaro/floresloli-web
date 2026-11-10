@@ -12,17 +12,27 @@ import { NEGOCIO } from '../../../compartido/negocio.ts';
 import { validarPedido } from '../../../compartido/pedido.ts';
 import type { PedidoEntrada } from '../../../compartido/pedido.ts';
 import { TIENDA, nombreMetodo } from '../../../compartido/tienda.ts';
-import { ajustesDeDias, anotarEvento, caducarPedido, caducarVencidos, crearPedido, leerPedido, ocupacionPorDia, permitir } from '../../_lib/datos.ts';
+import { avisarPedido } from '../../_lib/correo.ts';
+import {
+  ajustesDeDias,
+  anotarEvento,
+  caducarPedido,
+  caducarVencidos,
+  crearPedido,
+  leerPedido,
+  lineasDe,
+  ocupacionPorDia,
+  permitir,
+} from '../../_lib/datos.ts';
 import type { Env } from '../../_lib/entorno.ts';
 import { estadoTienda } from '../../_lib/entorno.ts';
 import { fallo, igualesSeguro, ipDe, json, leerJson, mismoOrigen, sha256 } from '../../_lib/http.ts';
 import { crearSesionDePago } from '../../_lib/stripe.ts';
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUntil }) => {
   const tienda = estadoTienda(env);
-  if (!tienda.pedidosOnline) {
-    return fallo(503, 'sin-venta-online', 'Ahora mismo los encargos se hacen por WhatsApp o por teléfono.', { porWhatsApp: true });
-  }
+  const sinVenta = () => fallo(503, 'sin-venta-online', 'Ahora mismo los encargos se hacen por WhatsApp o por teléfono.', { porWhatsApp: true });
+  if (!tienda.baseDatos) return sinVenta();
   if (!mismoOrigen(request)) return fallo(403, 'origen', 'Petición no permitida.');
 
   const db = env.DB!;
@@ -39,6 +49,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (typeof entrada.web === 'string' && entrada.web.trim() !== '') {
     return fallo(400, 'datos', 'No hemos podido leer el pedido. Recarga la página e inténtalo de nuevo.');
   }
+
+  // Pagar al recoger: solo si está activado en compartido/tienda.ts y el pedido se recoge en la tienda.
+  const pagaEnTienda = TIENDA.pagoEnTienda && entrada.pagoEnTienda === true && entrada.entrega?.metodo === 'recogida';
+  if (!pagaEnTienda && !tienda.pedidosOnline) return sinVenta();
 
   const validacion = validarPedido(entrada, catalogoCompra(tienda.entorno));
   if (!validacion.ok) {
@@ -61,10 +75,30 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   // Día de entrega: abierto, dentro de hora y con hueco.
   const fecha = pedido.entrega.fecha;
-  const [ajustes, ocupacion] = await Promise.all([ajustesDeDias(db, fecha, fecha), ocupacionPorDia(db, fecha, fecha, ahora)]);
+  const [ajustes, ocupacion] = await Promise.all([
+    ajustesDeDias(db, fecha, fecha),
+    ocupacionPorDia(db, tienda.entorno, fecha, fecha, ahora),
+  ]);
   const dia = estadoDia(fecha, ahoraEnMadrid(ahora), ajustes.get(fecha), ocupacion.get(fecha) ?? 0);
   if (!dia.disponible) {
     return json({ error: 'fecha', mensaje: dia.aviso, errores: { 'entrega.fecha': dia.aviso } }, 409);
+  }
+
+  const origen = new URL(request.url).origin;
+
+  if (pagaEnTienda) {
+    const { ref, token } = await crearPedido(
+      db,
+      { pedido, entorno: tienda.entorno, origen: 'web', estado: 'nuevo', pagoEstado: 'pendiente', pagoMetodo: 'tienda', autor: 'cliente' },
+      ahora,
+    );
+    waitUntil(
+      (async () => {
+        const fila = await leerPedido(db, ref);
+        if (fila) await avisarPedido(env, fila, (await lineasDe(db, [ref])).get(ref) ?? [], origen);
+      })().catch((error) => console.error('Aviso de pedido', ref, error)),
+    );
+    return json({ ref, token, url: `/pedido/gracias/?ref=${ref}&t=${token}` }, 201);
   }
 
   const { ref, token } = await crearPedido(
@@ -72,8 +106,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     { pedido, entorno: tienda.entorno, origen: 'web', estado: 'pendiente_pago', pagoEstado: 'pendiente', pagoMetodo: tienda.pago!, autor: 'cliente' },
     ahora,
   );
-
-  const origen = new URL(request.url).origin;
 
   if (tienda.pago === 'simulado') {
     return json({ ref, token, url: `/pedido/pago-de-prueba/?ref=${ref}&t=${token}` }, 201);

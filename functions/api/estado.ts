@@ -11,6 +11,6 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
     entorno: e.entorno,
     pedidosOnline: e.pedidosOnline,
     pago: e.pedidosOnline ? e.pago : null,
-    pagoEnTienda: TIENDA.pagoEnTienda,
+    pagoEnTienda: TIENDA.pagoEnTienda && e.baseDatos,
   });
 };

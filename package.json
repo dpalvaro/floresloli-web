@@ -17,7 +17,7 @@
     "test": "node --experimental-strip-types --test \"pruebas/*.test.ts\"",
     "prueba:compra": "node --experimental-strip-types herramientas/prueba-compra.mjs",
     "tipos": "tsc --noEmit",
-    "imagenes": "node herramientas/imagenes-sociales.mjs"
+    "imagenes": "node --experimental-strip-types herramientas/imagenes-sociales.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261110.1",

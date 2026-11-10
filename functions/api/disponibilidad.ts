@@ -4,6 +4,7 @@ import { ahoraEnMadrid, calendarioEntrega, sumarDias } from '../../compartido/fe
 import { TIENDA } from '../../compartido/tienda.ts';
 import { ajustesDeDias, caducarVencidos, ocupacionPorDia } from '../_lib/datos.ts';
 import type { Env } from '../_lib/entorno.ts';
+import { entornoDe } from '../_lib/entorno.ts';
 import { json } from '../_lib/http.ts';
 
 const DIAS = 35;
@@ -19,7 +20,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
     await caducarVencidos(env.DB, ahora);
     [ajustes, ocupacion] = await Promise.all([
       ajustesDeDias(env.DB, madrid.fecha, hasta),
-      ocupacionPorDia(env.DB, madrid.fecha, hasta, ahora),
+      ocupacionPorDia(env.DB, entornoDe(env), madrid.fecha, hasta, ahora),
     ]);
   }
 

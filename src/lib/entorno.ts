@@ -12,6 +12,9 @@
 
 import type { Entorno } from '../../compartido/catalogo.ts';
 
+// Este archivo solo se ejecuta al construir la web (en Node), nunca en el navegador.
+declare const process: { env: Record<string, string | undefined> };
+
 function calcular(): Entorno {
   const explicito = (process.env.ENTORNO ?? '').trim().toLowerCase();
   if (explicito === 'pruebas' || explicito === 'produccion') return explicito;

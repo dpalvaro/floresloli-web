@@ -1,0 +1,29 @@
+---
+import Base from '../layouts/Base.astro';
+import Icono from '../components/Icono.astro';
+import { NEGOCIO, enlaceTelefono } from '../../compartido/negocio.ts';
+import { RUTA_CONTACTO, RUTA_TIENDA } from '../lib/rutas.ts';
+---
+
+<Base titulo="Página no encontrada" descripcion={`Esta página no existe en la web de ${NEGOCIO.nombre}.`} noindex>
+  <div class="envoltura estrecha no-encontrada">
+    <h1>Esta página no existe</h1>
+    <p class="entrada">Puede que el enlace esté mal escrito o que la página haya cambiado de sitio. Lo que buscas seguramente está aquí:</p>
+    <div class="botones">
+      <a class="boton grande" href={RUTA_TIENDA}>Ver flores y plantas</a>
+      <a class="boton linea grande" href="/">Ir al inicio</a>
+    </div>
+    <p class="mas">
+      También puedes llamar al <a href={enlaceTelefono(NEGOCIO.telefono)}><Icono nombre="telefono" tamano={18} /> {NEGOCIO.telefono}</a> o ver
+      <a href={RUTA_CONTACTO}>dónde estamos</a>.
+    </p>
+  </div>
+</Base>
+
+<style>
+  .no-encontrada { padding-block: clamp(48px, 10vw, 110px) var(--hueco-seccion); }
+  h1 { margin-bottom: 0.35em; }
+  .entrada { margin-bottom: 1.4em; }
+  .mas { margin-top: 26px; color: var(--gris); }
+  .mas a :global(svg) { display: inline; vertical-align: -3px; }
+</style>

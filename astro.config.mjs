@@ -12,11 +12,14 @@ export default defineConfig({
   // Todas las direcciones acaban en «/»: así canonical, sitemap y enlaces coinciden.
   trailingSlash: 'always',
   build: { format: 'directory', inlineStylesheets: 'auto' },
-  // Astro 7 quita por defecto los espacios entre enlaces seguidos (reglas de JSX); así se conservan.
+  // Desde Astro 7, por defecto se quitan los espacios entre elementos como hace JSX ('jsx').
+  // Con `true` se comprime sin perder los espacios entre enlaces y palabras seguidas.
   compressHTML: true,
   devToolbar: { enabled: false },
   server: { port: 4321 },
   vite: {
+    // Ningún script va incrustado en el HTML: así la política de seguridad (public/_headers) puede prohibirlos.
+    build: { assetsInlineLimit: 0 },
     server: {
       // En `npm run dev`, la API la sirve `npm run api` (wrangler) en el puerto 8788.
       proxy: { '/api': 'http://127.0.0.1:8788' },
