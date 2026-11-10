@@ -96,6 +96,9 @@ function h<K extends keyof HTMLElementTagNameMap>(etiqueta: K, atributos: Atribu
   return e;
 }
 
+/** Quita los huecos de una lista de hijos (replaceChildren no admite null). */
+const soloNodos = (...lista: Hijo[]) => lista.filter((n): n is Node | string => n !== null && n !== undefined && n !== false);
+
 const ORIGEN: Record<string, string> = { web: 'Web', tienda: 'Mostrador', telefono: 'Teléfono', whatsapp: 'WhatsApp' };
 const COBRO: Record<string, string> = { pagado: 'Cobrado', pendiente: 'Sin cobrar', reembolsado: 'Devuelto' };
 const FORMA: Record<string, string> = {
@@ -575,6 +578,7 @@ function iniciar(raiz: HTMLElement): void {
   function imprimir(p: PedidoPanel): void {
     const d = p.destinatario;
     hoja.replaceChildren(
+      ...soloNodos(
       h('h1', null, `Pedido ${p.ref}`),
       h('p', null, h('b', null, `${p.entrega.nombre} · ${p.entrega.fechaTexto}`)),
       h('h2', null, 'Qué lleva'),
@@ -590,6 +594,7 @@ function iniciar(raiz: HTMLElement): void {
       h('p', null, `${p.comprador.nombre}${p.comprador.telefono ? ` · ${p.comprador.telefono}` : ''}`),
       h('p', null, `Total: ${eurosDeCentimos(p.total)} · ${COBRO[p.pago.estado] ?? p.pago.estado}`),
       p.dedicatoria ? h('div', { class: 'tarjeta-imprimir' }, p.dedicatoria) : null,
+      ),
     );
     window.print();
   }
@@ -878,6 +883,7 @@ function iniciar(raiz: HTMLElement): void {
             ? 'Pago simulado: no se cobra nada.'
             : 'La web no puede cobrar: los encargos van por WhatsApp.';
       $('[data-estado-tienda]').replaceChildren(
+        ...soloNodos(
         h(
           'ul',
           { class: 'diagnostico' },
@@ -894,6 +900,7 @@ function iniciar(raiz: HTMLElement): void {
         ),
         e.motivos.length ? h('ul', { class: 'ayuda-seccion' }, ...e.motivos.map((m) => h('li', null, m))) : null,
         h('p', { class: 'ayuda-seccion' }, 'Los precios, el horario, el reparto y estas reglas se cambian en el repositorio de la web (archivos de la carpeta «compartido»).'),
+        ),
       );
       quitarAviso();
     } catch (error) {

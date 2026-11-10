@@ -339,13 +339,14 @@ function iniciar(form: HTMLFormElement, catalogo: ProductoCompra[], idsComplemen
     let primero: HTMLElement | null = null;
     for (const hueco of form.querySelectorAll<HTMLElement>('[data-error-de]')) {
       const mensaje = errores[hueco.dataset.errorDe!];
-      const visible = hueco.closest('[hidden]') === null;
+      // El propio hueco está oculto mientras no hay error: se mira si lo está la sección que lo contiene.
+      const visible = !hueco.parentElement?.closest('[hidden]');
       hueco.textContent = mensaje && visible ? mensaje : '';
       hueco.hidden = !(mensaje && visible);
     }
     for (const control of form.querySelectorAll<HTMLElement>('[data-campo]')) {
       const mensaje = errores[control.dataset.campo!];
-      const visible = control.closest('[hidden]') === null;
+      const visible = !control.closest('[hidden]');
       if (mensaje && visible) {
         control.setAttribute('aria-invalid', 'true');
         primero ??= control;
@@ -532,7 +533,13 @@ function iniciar(form: HTMLFormElement, catalogo: ProductoCompra[], idsComplemen
   pintarTodo();
   void Promise.all([cargarEstado(), cargarDisponibilidad()]).then(pintarTodo);
 
-  form.addEventListener('input', () => {
+  form.addEventListener('input', (evento) => {
+    // Al corregir un campo, se le quita la marca de error.
+    const control = evento.target as HTMLElement;
+    if (control.dataset?.campo) {
+      control.removeAttribute('aria-invalid');
+      for (const hueco of form.querySelectorAll<HTMLElement>(`[data-error-de="${control.dataset.campo}"]`)) hueco.hidden = true;
+    }
     guardarFormulario();
     pintarZona();
     pintarResumen();
