@@ -1,0 +1,203 @@
+---
+/*
+ * Flores al Hospital Universitario de Toledo.
+ * Tono: delicado y tranquilizador, sin dramatismo y sin preguntar por el paciente.
+ * Nunca nombres, habitaciones ni fotos de pacientes, tampoco como ejemplo.
+ */
+import Base from '../layouts/Base.astro';
+import Icono from '../components/Icono.astro';
+import Migas from '../components/Migas.astro';
+import Preguntas from '../components/Preguntas.astro';
+import TarjetaProducto from '../components/TarjetaProducto.astro';
+import { euros, productosDeTienda } from '../../compartido/catalogo.ts';
+import { NEGOCIO, enlaceTelefono, enlaceWhatsApp, SALUDO_WHATSAPP } from '../../compartido/negocio.ts';
+import { TIENDA } from '../../compartido/tienda.ts';
+import { ENTORNO } from '../lib/entorno.ts';
+import { RUTA_A_MEDIDA, RUTA_HOSPITAL, RUTA_REPARTO, RUTA_TIENDA } from '../lib/rutas.ts';
+import { jsonLdFloristeria, jsonLdMigas, jsonLdPreguntas } from '../lib/seo.ts';
+
+/*
+ * PENDIENTE (T17): cambiar este texto por las normas reales del hospital cuando Álvaro
+ * hable con Atención al Paciente. Hasta entonces no se promete nada concreto.
+ */
+const AVISO_UNIDADES =
+  'Cada unidad del hospital tiene sus normas y algunas no admiten flores ni plantas. Si no lo sabes, pregúntalo en el control de la planta antes de encargar.';
+
+const precioEntrega = euros(TIENDA.entrega.hospital.precio);
+const horaLimite = TIENDA.horaLimiteMismoDia.replace(/^0/, '');
+
+// Lo que mejor va para una habitación: poco perfume, sin jarrón o que dure.
+const RECOMENDADOS = [
+  'ramo-de-margaritas-y-gerberas',
+  'centro-de-flor-natural',
+  'orquidea',
+  'ramo-para-recien-nacido',
+  'ramo-a-tu-medida',
+  'kalanchoe',
+  'ramo-variado-de-temporada',
+  'cesta-de-flores',
+];
+const visibles = productosDeTienda(ENTORNO).filter((p) => p.hospital !== false);
+const recomendados = RECOMENDADOS.map((id) => visibles.find((p) => p.id === id))
+  .filter((p) => p !== undefined)
+  .slice(0, 8);
+
+const preguntas = [
+  {
+    pregunta: '¿Puedo enviar flores al hospital hoy mismo?',
+    respuesta: `Sí, si haces el pedido antes de las ${horaLimite} de un día en que la tienda abre. Si es más tarde, llámanos al ${NEGOCIO.telefono} y vemos si llegamos.`,
+  },
+  {
+    pregunta: '¿Qué datos hacen falta?',
+    respuesta: 'El nombre y los apellidos de la persona ingresada. Si sabes la planta y la habitación, mejor, pero no es obligatorio.',
+  },
+  { pregunta: '¿Todas las unidades admiten flores?', respuesta: AVISO_UNIDADES },
+  {
+    pregunta: '¿Cuánto cuesta la entrega en el hospital?',
+    respuesta: `${precioEntrega}, igual que el reparto a domicilio en Toledo. El hospital está en el mismo barrio que la tienda.`,
+  },
+  {
+    pregunta: '¿Puedo añadir una tarjeta?',
+    respuesta: 'Sí. Escribe la dedicatoria al hacer el pedido y la ponemos a mano en una tarjeta.',
+  },
+  {
+    pregunta: '¿Y si le dan el alta antes de la entrega?',
+    respuesta: `Llámanos al ${NEGOCIO.telefono} en cuanto lo sepas y buscamos la mejor solución.`,
+  },
+];
+
+const migas = [
+  { nombre: 'Inicio', ruta: '/' },
+  { nombre: 'Flores al Hospital Universitario de Toledo', ruta: RUTA_HOSPITAL },
+];
+---
+
+<Base
+  titulo="Flores al Hospital Universitario de Toledo"
+  descripcion="Envía flores o una planta al Hospital Universitario de Toledo desde una floristería del mismo barrio, el Polígono. Las preparamos a mano y las llevamos al hospital."
+  jsonLd={[jsonLdFloristeria(), jsonLdMigas(migas), jsonLdPreguntas(preguntas)]}
+>
+  <div class="envoltura cabeza-pagina">
+    <Migas migas={migas} />
+    <h1>Flores al Hospital Universitario de Toledo</h1>
+    <p class="entrada">
+      La tienda está en el mismo barrio que el hospital. Preparamos el ramo, la planta o el centro a mano y lo llevamos allí por ti.
+    </p>
+    <div class="botones acciones">
+      <a class="boton" href="#flores">Elegir flores para el hospital</a>
+      <a class="boton linea" href={enlaceTelefono(NEGOCIO.telefono)}><Icono nombre="telefono" /> {NEGOCIO.telefono}</a>
+    </div>
+  </div>
+
+  <section class="seccion" aria-labelledby="t-como">
+    <div class="envoltura">
+      <h2 id="t-como" class="titulo">Cómo funciona</h2>
+      <ol class="pasos">
+        <li>
+          <h3>Elige las flores</h3>
+          <p>Un ramo, una planta o un centro. Si lo prefieres, dinos el importe y lo hacemos a tu medida.</p>
+        </li>
+        <li>
+          <h3>Marca «Hospital Universitario»</h3>
+          <p>Al hacer el pedido, escribe el nombre de la persona. Si sabes la planta y la habitación, añádelas.</p>
+        </li>
+        <li>
+          <h3>Lo llevamos</h3>
+          <p>Lo preparamos en la tienda y lo llevamos al hospital el día que elijas, en el horario de la tienda.</p>
+        </li>
+      </ol>
+      <div class="datos-clave">
+        <dl class="datos">
+          <div>
+            <dt>Entrega en el hospital</dt>
+            <dd>{precioEntrega}</dd>
+          </div>
+          <div>
+            <dt>Para el mismo día</dt>
+            <dd>Pide antes de las {horaLimite}. Si es más tarde, llámanos.</dd>
+          </div>
+          <div>
+            <dt>Dirección del hospital</dt>
+            <dd>{NEGOCIO.hospital.direccion}</dd>
+          </div>
+        </dl>
+        <p class="aviso unidades">{AVISO_UNIDADES}</p>
+      </div>
+    </div>
+  </section>
+
+  {
+    recomendados.length > 0 && (
+      <section class="seccion" aria-labelledby="flores" >
+        <div class="envoltura">
+          <div class="cabeza-seccion">
+            <div>
+              <h2 id="flores">Lo que mejor va para una habitación</h2>
+              <p>Flores de perfume suave, centros que no necesitan jarrón y plantas pequeñas que duran.</p>
+            </div>
+            <a class="enlace-mas" href={RUTA_TIENDA}>Ver todo el catálogo</a>
+          </div>
+          <ul class="rejilla-productos">
+            {recomendados.map((p) => <TarjetaProducto producto={p} />)}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="seccion" aria-labelledby="t-consejos">
+    <div class="envoltura">
+      <div class="prosa">
+        <h2 id="t-consejos">Qué elegir</h2>
+        <ul>
+          <li><strong>Poco perfume.</strong> En una habitación pequeña se agradece: margaritas, gerberas o rosas antes que liliums.</li>
+          <li><strong>Un centro, si no hay jarrón.</strong> Va montado en su base, con agua, y se coloca tal cual llega.</li>
+          <li><strong>Una planta pequeña.</strong> Ocupa poco, dura y se la lleva a casa cuando salga.</li>
+        </ul>
+        <p>
+          Si no sabes qué elegir, <a href={RUTA_A_MEDIDA}>dinos cuánto quieres gastar</a> y lo preparamos pensando en el hospital. También puedes
+          <a href={enlaceWhatsApp(`${SALUDO_WHATSAPP}. Es para el Hospital Universitario de Toledo.`)} rel="noopener">escribirnos por WhatsApp</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="t-preguntas">
+    <div class="envoltura">
+      <h2 id="t-preguntas" class="titulo">Preguntas frecuentes</h2>
+      <Preguntas preguntas={preguntas} />
+      <p class="mas">
+        ¿Es para una casa y no para el hospital? Mira el <a href={RUTA_REPARTO}>reparto a domicilio en Toledo</a>.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .acciones { margin-top: 26px; }
+  .titulo { font-size: clamp(1.6rem, 3.8vw, 2.2rem); margin-bottom: 0.9em; }
+  .pasos { list-style: none; counter-reset: paso; margin: 0 0 36px; padding: 0; display: grid; gap: 28px; }
+  .pasos li { counter-increment: paso; margin: 0; padding-left: 62px; position: relative; }
+  .pasos li::before {
+    content: counter(paso);
+    position: absolute;
+    left: 0;
+    top: -4px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: var(--lima);
+    color: var(--violeta-osc);
+    font: 400 1.6rem/46px var(--serif);
+    text-align: center;
+  }
+  .pasos h3 { margin-bottom: 6px; }
+  .pasos p { color: var(--gris); max-width: 38ch; }
+  .datos-clave { display: grid; gap: 24px; padding-top: 28px; border-top: 1px solid var(--linea); }
+  .unidades { max-width: 60ch; align-self: start; }
+  .mas { margin-top: 28px; }
+  @media (min-width: 900px) {
+    .pasos { grid-template-columns: repeat(3, 1fr); gap: 40px; }
+    .datos-clave { grid-template-columns: 1fr 1fr; gap: 56px; }
+  }
+</style>

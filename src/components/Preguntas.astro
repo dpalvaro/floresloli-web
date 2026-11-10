@@ -1,0 +1,24 @@
+---
+/* Preguntas frecuentes desplegables. Las respuestas son texto llano: salen también en los datos estructurados. */
+interface Props {
+  preguntas: { pregunta: string; respuesta: string }[];
+}
+const { preguntas } = Astro.props;
+---
+
+<div class="preguntas">
+  {
+    preguntas.map((p) => (
+      <details class="pregunta">
+        <summary>{p.pregunta}</summary>
+        <div class="respuesta">
+          <p>{p.respuesta}</p>
+        </div>
+      </details>
+    ))
+  }
+</div>
+
+<style>
+  .preguntas { border-top: 1px solid var(--linea); max-width: 820px; }
+</style>

@@ -1,0 +1,162 @@
+---
+import Icono from './Icono.astro';
+import { rutaCategoria } from '../../compartido/catalogo.ts';
+import { NEGOCIO, direccionCompleta, enlaceComoLlegar, enlaceTelefono, enlaceWhatsApp, horarioParaMostrar } from '../../compartido/negocio.ts';
+import { LEGALES, RUTA_CONTACTO, RUTA_CUIDADOS, RUTA_EVENTOS, RUTA_HOSPITAL, RUTA_REPARTO, RUTA_TIENDA, categoriasConPagina } from '../lib/rutas.ts';
+
+interface Props {
+  simple?: boolean;
+}
+const { simple = false } = Astro.props;
+const redes = Object.entries(NEGOCIO.redes).filter(([, r]) => r.confirmada && r.url);
+const anio = new Date().getFullYear();
+---
+
+<footer class="pie no-imprimir">
+  <div class="envoltura">
+    {
+      !simple && (
+        <div class="columnas">
+          <div class="tienda">
+            <p class="nombre">{NEGOCIO.nombre}</p>
+            <p>
+              {direccionCompleta()}
+              <br />
+              {NEGOCIO.direccion.barrio} ({NEGOCIO.direccion.barrioOficial})
+            </p>
+            <p class="estado-apertura" data-apertura />
+            <table class="horario">
+              <tbody>
+                {horarioParaMostrar().map((fila) => (
+                  <tr>
+                    <th scope="row">{fila.dias}</th>
+                    <td>{fila.horas.join(' y ')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p>
+              <a href={enlaceComoLlegar()} rel="noopener">
+                Cómo llegar
+              </a>
+            </p>
+          </div>
+
+          <nav aria-label="Flores y plantas">
+            <h2>Flores y plantas</h2>
+            <ul>
+              <li>
+                <a href={RUTA_TIENDA}>Todo el catálogo</a>
+              </li>
+              {categoriasConPagina().map((c) => (
+                <li>
+                  <a href={rutaCategoria(c)}>{c.nombre}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <nav aria-label="Servicios">
+            <h2>Te ayudamos</h2>
+            <ul>
+              <li>
+                <a href={RUTA_HOSPITAL}>Flores al Hospital Universitario</a>
+              </li>
+              <li>
+                <a href={RUTA_REPARTO}>Reparto a domicilio en Toledo</a>
+              </li>
+              <li>
+                <a href={RUTA_EVENTOS}>Bodas, comuniones y empresas</a>
+              </li>
+              <li>
+                <a href={RUTA_CUIDADOS}>Cómo cuidar tus flores</a>
+              </li>
+              <li>
+                <a href={RUTA_CONTACTO}>Dónde estamos</a>
+              </li>
+            </ul>
+          </nav>
+
+          <div>
+            <h2>Encargos</h2>
+            <ul class="contacto">
+              <li>
+                <a href={enlaceTelefono(NEGOCIO.telefono)}>
+                  <Icono nombre="telefono" tamano={20} /> {NEGOCIO.telefono}
+                </a>
+              </li>
+              <li>
+                <a href={enlaceWhatsApp()} rel="noopener">
+                  <Icono nombre="whatsapp" tamano={20} /> WhatsApp {NEGOCIO.movil}
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${NEGOCIO.correo}`}>
+                  <Icono nombre="correo" tamano={20} /> {NEGOCIO.correo}
+                </a>
+              </li>
+              {redes.map(([nombre, red]) => (
+                <li>
+                  <a href={red.url} rel="noopener" class="red">
+                    {nombre.charAt(0).toUpperCase() + nombre.slice(1)}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )
+    }
+
+    <div class="legal">
+      <p>
+        © {anio} {NEGOCIO.nombre}
+      </p>
+      <ul>
+        {LEGALES.map((l) => (
+          <li>
+            <a href={l.ruta}>{l.nombre}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .pie {
+    padding-block: clamp(40px, 6vw, 64px) 28px;
+    background: var(--violeta-osc);
+    color: #dad6ea;
+    font-size: 0.96rem;
+  }
+  .pie a { color: #fff; text-decoration-color: rgba(255, 255, 255, 0.4); }
+  .pie a:hover { color: var(--lima); text-decoration-color: currentColor; }
+  .columnas { display: grid; gap: 36px 32px; margin-bottom: 40px; }
+  @media (min-width: 640px) { .columnas { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1000px) { .columnas { grid-template-columns: 1.4fr 1fr 1.2fr 1.2fr; } }
+
+  .nombre { font-family: var(--serif); font-size: 1.6rem; line-height: 1.1; color: var(--lima); margin-bottom: 12px; }
+  h2 { font: 600 1rem/1.3 var(--sans); letter-spacing: 0; color: var(--lima); margin-bottom: 12px; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { margin: 0; }
+  nav a,
+  .contacto a { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; }
+  .contacto a { overflow-wrap: anywhere; }
+  .horario { margin: 0 0 14px; }
+  .horario th { color: #fff; white-space: nowrap; }
+  .estado-apertura { font-weight: 600; color: #fff; min-height: 1.5em; margin-bottom: 8px; }
+
+  .legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    justify-content: space-between;
+    padding-top: 22px;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    font-size: 0.9rem;
+  }
+  .legal p { margin: 0; }
+  .legal ul { display: flex; flex-wrap: wrap; gap: 6px 22px; }
+  .legal a { display: inline-block; padding: 6px 0; }
+</style>

@@ -1,0 +1,49 @@
+---
+/* Iconos de línea propios. Decorativos: el texto de al lado dice lo que hacen. */
+interface Props {
+  nombre: keyof typeof TRAZOS | 'whatsapp';
+  tamano?: number;
+  class?: string;
+}
+
+const TRAZOS = {
+  telefono: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>',
+  cesta: '<path d="M3 9h18l-2 11H5L3 9Z"/><path d="M8 9l4-6 4 6"/><path d="M9 13v3M15 13v3"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  cerrar: '<path d="M6 6l12 12M18 6L6 18"/>',
+  flecha: '<path d="M6 9l6 6 6-6"/>',
+  mapa: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.500c0 5.300-7 11.500-7 11.500Z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  reloj: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  reparto: '<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7.5" cy="17.500" r="1.800"/><circle cx="17.500" cy="17.500" r="1.800"/>',
+  tienda: '<path d="M4 10v10h16V10"/><path d="M3 10l2-6h14l2 6a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0Z"/><path d="M10 20v-5h4v5"/>',
+  hospital: '<path d="M5 21V5a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v16"/><path d="M3 21h18M12 8v6M9 11h6M10 21v-3h4v3"/>',
+  tarjeta: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h7M7 14h10"/>',
+  correcto: '<path d="M5 12.500l4.500 4.500L19 7.500"/>',
+  mas: '<path d="M12 5v14M5 12h14"/>',
+  menos: '<path d="M5 12h14"/>',
+  correo: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.500 7l8.500 6 8.500-6"/>',
+  imprimir: '<path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><path d="M7 14h10v6H7z"/>',
+} as const;
+
+const WHATSAPP =
+  '<path fill="currentColor" stroke="none" d="M12 2a10 10 0 0 0-8.600 15.100L2 22l5-1.300A10 10 0 1 0 12 2Zm0 18.200a8.200 8.200 0 0 1-4.200-1.150l-.300-.180-3 .790.800-2.900-.200-.300A8.200 8.200 0 1 1 12 20.200Zm4.500-6.100c-.250-.120-1.460-.720-1.690-.800-.230-.080-.390-.120-.560.120-.160.250-.640.800-.780.970-.140.160-.290.180-.540.060a6.700 6.700 0 0 1-2-1.230 7.400 7.400 0 0 1-1.370-1.700c-.140-.250 0-.380.110-.500.110-.110.250-.290.370-.430.120-.140.160-.250.250-.410.080-.160.040-.310-.020-.430-.060-.120-.560-1.340-.760-1.830-.200-.480-.400-.420-.560-.420h-.470a.900.900 0 0 0-.660.310 2.750 2.750 0 0 0-.860 2.050c0 1.200.880 2.370 1 2.530.120.160 1.730 2.640 4.200 3.700.590.250 1.040.400 1.400.510.590.190 1.120.160 1.540.100.470-.070 1.460-.600 1.660-1.170.200-.580.200-1.070.140-1.170-.060-.100-.220-.160-.470-.290Z"/>';
+
+const { nombre, tamano = 24, class: clase } = Astro.props;
+const esWhatsApp = (nombre as string) === 'whatsapp';
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  width={tamano}
+  height={tamano}
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.800"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  focusable="false"
+  class={clase}
+  set:html={esWhatsApp ? WHATSAPP : TRAZOS[nombre as keyof typeof TRAZOS]}
+/>

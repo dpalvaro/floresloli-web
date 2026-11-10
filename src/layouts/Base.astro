@@ -1,0 +1,97 @@
+---
+/* Plantilla común: cabecera de buscadores, cabecera de la web, contenido y pie. */
+import '../styles/global.css';
+import Cabecera from '../components/Cabecera.astro';
+import Pie from '../components/Pie.astro';
+import { NEGOCIO } from '../../compartido/negocio.ts';
+import { ENTORNO, ES_PRUEBAS } from '../lib/entorno.ts';
+import { urlAbsoluta } from '../lib/seo.ts';
+
+interface Props {
+  /** Título de la página, sin el nombre de la tienda (se añade solo). */
+  titulo: string;
+  descripcion: string;
+  /** Imagen al compartir el enlace (ruta o dirección completa, 1200 × 630). */
+  imagen?: string;
+  /** true = que no salga en buscadores (cesta, panel, páginas de paso). */
+  noindex?: boolean;
+  /** Bloques de datos estructurados (JSON-LD). */
+  jsonLd?: Record<string, unknown>[];
+  /** Cabecera y pie reducidos, sin menú: para el pedido y el panel. */
+  simple?: boolean;
+  tipoOg?: 'website' | 'product';
+}
+
+const { titulo, descripcion, imagen = '/social/portada.jpg', noindex = false, jsonLd = [], simple = false, tipoOg = 'website' } = Astro.props;
+
+const tituloCompleto = titulo.includes(NEGOCIO.nombre) ? titulo : `${titulo} · ${NEGOCIO.nombre}`;
+const canonica = urlAbsoluta(Astro.url.pathname);
+const ocultar = noindex || ES_PRUEBAS;
+const aTexto = (dato: unknown) => JSON.stringify(dato).replace(/</g, '\\u003c');
+---
+
+<!doctype html>
+<html lang="es" data-entorno={ENTORNO}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{tituloCompleto}</title>
+    <meta name="description" content={descripcion} />
+    <link rel="canonical" href={canonica} />
+    {ocultar && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content={tipoOg} />
+    <meta property="og:site_name" content={NEGOCIO.nombre} />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:title" content={titulo} />
+    <meta property="og:description" content={descripcion} />
+    <meta property="og:url" content={canonica} />
+    <meta property="og:image" content={urlAbsoluta(imagen)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <meta name="theme-color" content="#D6E59B" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preload" href="/fuentes/gloock-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fuentes/figtree-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+
+    {jsonLd.map((bloque) => <script type="application/ld+json" is:inline set:html={aTexto(bloque)} />)}
+    <slot name="cabeza" />
+  </head>
+  <body>
+    <a class="saltar" href="#contenido">Saltar al contenido</a>
+    {
+      ES_PRUEBAS && (
+        <p class="franja-pruebas no-imprimir">
+          <strong>Vista de pruebas.</strong> Aquí se ven productos y precios de ejemplo y el pago no cobra de verdad. La web pública solo enseña lo
+          confirmado.
+        </p>
+      )
+    }
+    <Cabecera simple={simple} />
+    <main id="contenido" tabindex="-1">
+      <slot />
+    </main>
+    <Pie simple={simple} />
+    <script>
+      import '../scripts/cabecera.ts';
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  .franja-pruebas {
+    margin: 0;
+    padding: 8px var(--margen);
+    background: var(--ambar);
+    color: #4a3800;
+    font-size: 0.86rem;
+    line-height: 1.35;
+    text-align: center;
+  }
+  main:focus { outline: none; }
+</style>

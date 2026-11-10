@@ -1,0 +1,17 @@
+# Variables para probar en local. Copia este archivo como «.dev.vars» (no se sube al repositorio).
+# En Cloudflare se ponen en Settings › Variables and Secrets (ver docs/PUESTA-EN-MARCHA.md).
+
+ENTORNO=pruebas
+
+# Panel de pedidos: clave para entrar (mínimo 8 caracteres) y secreto para firmar la sesión (mínimo 24).
+PANEL_CLAVE=cambia-esta-clave
+SECRETO_SESION=cambia-esto-por-un-texto-largo-y-aleatorio
+
+# Stripe en modo prueba (opcional). Sin estas dos líneas, el pago en local es simulado.
+# STRIPE_SECRET_KEY=sk_test_...
+# STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Correos de aviso con Resend (opcional). Hace falta un dominio verificado.
+# RESEND_API_KEY=re_...
+# CORREO_REMITENTE=Flores y Plantas Loli <pedidos@tudominio.es>
+# CORREO_AVISOS=floreslolitoledo@gmail.com

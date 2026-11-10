@@ -1,0 +1,141 @@
+---
+import { Picture } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Icono from '../components/Icono.astro';
+import Migas from '../components/Migas.astro';
+import { NEGOCIO, enlaceTelefono, enlaceWhatsApp, SALUDO_WHATSAPP } from '../../compartido/negocio.ts';
+import { TIPOS_PRESUPUESTO } from '../../compartido/pedido.ts';
+import { foto } from '../lib/imagenes.ts';
+import { RUTA_EVENTOS } from '../lib/rutas.ts';
+import { jsonLdFloristeria, jsonLdMigas } from '../lib/seo.ts';
+
+const imagen = foto('centro-natural')!;
+const migas = [
+  { nombre: 'Inicio', ruta: '/' },
+  { nombre: 'Bodas, comuniones y empresas', ruta: RUTA_EVENTOS },
+];
+---
+
+<Base
+  titulo="Flores para bodas, comuniones y empresas en Toledo"
+  descripcion="Ramos de novia, flores para la ceremonia, comuniones, eventos y empresas en Toledo. Cuéntanos qué necesitas y te hacemos un presupuesto sin compromiso."
+  jsonLd={[jsonLdFloristeria(), jsonLdMigas(migas)]}
+>
+  <div class="envoltura cabeza-pagina">
+    <Migas migas={migas} />
+    <h1>Flores para bodas, comuniones y empresas</h1>
+    <p class="entrada">Cada celebración es distinta, así que aquí no hay precios cerrados. Cuéntanos la idea y te preparamos un presupuesto sin compromiso.</p>
+  </div>
+
+  <section class="seccion">
+    <div class="envoltura rejilla">
+      <div class="prosa">
+        <h2>Qué preparamos</h2>
+        <h3>Bodas</h3>
+        <p>El ramo de novia, los prendidos y las flores para la ceremonia y el banquete, con los colores y el estilo que tengas en mente.</p>
+        <h3>Comuniones y bautizos</h3>
+        <p>Flores para la iglesia, centros para las mesas y detalles para la familia.</p>
+        <h3>Empresas y eventos</h3>
+        <p>Centros y plantas para recepciones, escaparates y actos, regalos para clientes o para el equipo y encargos periódicos.</p>
+        <h3>Cuándo pedirlo</h3>
+        <p>Cuanto antes, mejor: en primavera y en verano hay muchas celebraciones. Si la fecha está cerca, llámanos y lo vemos.</p>
+        <div class="marco foto">
+          <Picture
+            src={imagen}
+            alt="Centro de gerberas naranjas y rosas, crisantemos y claveles montado en la tienda"
+            widths={[360, 540, 720]}
+            sizes="(min-width: 900px) 420px, 92vw"
+            formats={['webp']}
+            fallbackFormat="jpg"
+            quality={72}
+          />
+        </div>
+      </div>
+
+      <div class="formulario-caja">
+        <h2 id="t-form">Pide tu presupuesto</h2>
+        <form data-presupuesto novalidate aria-labelledby="t-form">
+          <div class="campo">
+            <label for="tipo">¿Para qué es?</label>
+            <select id="tipo" name="tipo" required>
+              <option value="">Elige una opción</option>
+              {TIPOS_PRESUPUESTO.map((t) => <option value={t.id}>{t.nombre}</option>)}
+            </select>
+            <p class="error" data-error-de="tipo" hidden></p>
+          </div>
+          <div class="campo">
+            <label for="fecha">Fecha del evento <span class="opcional">(si ya la sabes)</span></label>
+            <input id="fecha" name="fecha" type="date" />
+            <p class="error" data-error-de="fecha" hidden></p>
+          </div>
+          <div class="campo">
+            <label for="mensaje">Cuéntanos qué necesitas</label>
+            <textarea id="mensaje" name="mensaje" rows="5" maxlength="1500" required aria-describedby="ayuda-mensaje"></textarea>
+            <p class="ayuda" id="ayuda-mensaje">Colores, estilo, número de mesas o de invitados, lugar… Lo que sepas.</p>
+            <p class="error" data-error-de="mensaje" hidden></p>
+          </div>
+          <div class="fila-campos">
+            <div class="campo">
+              <label for="nombre">Tu nombre</label>
+              <input id="nombre" name="nombre" type="text" autocomplete="name" maxlength="80" required />
+              <p class="error" data-error-de="nombre" hidden></p>
+            </div>
+            <div class="campo">
+              <label for="telefono">Teléfono</label>
+              <input id="telefono" name="telefono" type="tel" autocomplete="tel" inputmode="tel" maxlength="25" required />
+              <p class="error" data-error-de="telefono" hidden></p>
+            </div>
+          </div>
+          <div class="campo">
+            <label for="email">Correo <span class="opcional">(opcional)</span></label>
+            <input id="email" name="email" type="email" autocomplete="email" maxlength="120" />
+            <p class="error" data-error-de="email" hidden></p>
+          </div>
+          <div class="trampa" aria-hidden="true">
+            <label for="web">No rellenes este campo</label>
+            <input id="web" name="web" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+          <div class="campo">
+            <label class="casilla">
+              <input type="checkbox" name="acepta" required />
+              <span>He leído la <a href="/privacidad/" target="_blank" rel="noopener">política de privacidad</a> y acepto que se usen mis datos para contestar a esta solicitud.</span>
+            </label>
+            <p class="error" data-error-de="acepta" hidden></p>
+          </div>
+          <p class="privacidad-resumen">
+            Responsable: {NEGOCIO.legal.titular}. Finalidad: contestar a tu solicitud de presupuesto. No se usan para publicidad ni se ceden a terceros.
+          </p>
+          <p class="aviso error" data-fallo role="alert" hidden></p>
+          <button class="boton grande ancho" type="submit">Enviar la solicitud</button>
+        </form>
+
+        <div class="aviso bien" data-enviado role="status" tabindex="-1" hidden>
+          <p><strong>Solicitud enviada.</strong> Te llamamos o te escribimos para concretar los detalles.</p>
+          <p data-referencia></p>
+        </div>
+
+        <p class="otras-vias">
+          ¿Prefieres hablarlo? Llama al <a href={enlaceTelefono(NEGOCIO.telefono)}>{NEGOCIO.telefono}</a> o
+          <a href={enlaceWhatsApp(`${SALUDO_WHATSAPP}. Quiero un presupuesto para un evento.`)} rel="noopener" data-whatsapp-presupuesto><Icono nombre="whatsapp" tamano={18} /> escribe por WhatsApp</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import '../scripts/presupuesto.ts';
+  </script>
+</Base>
+
+<style>
+  .rejilla { display: grid; gap: 40px; }
+  .foto { max-width: 420px; margin-top: 28px; }
+  .formulario-caja { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: clamp(20px, 4vw, 32px); align-self: start; }
+  .formulario-caja h2 { font-size: clamp(1.5rem, 3.4vw, 2rem); margin-bottom: 0.8em; }
+  .privacidad-resumen { font-size: 0.86rem; color: var(--gris); }
+  .otras-vias { margin-top: 20px; font-size: 0.95rem; }
+  .otras-vias a :global(svg) { display: inline; vertical-align: -3px; }
+  @media (min-width: 900px) {
+    .rejilla { grid-template-columns: 0.9fr 1.1fr; gap: 64px; }
+  }
+</style>

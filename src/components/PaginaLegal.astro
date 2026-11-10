@@ -1,0 +1,37 @@
+---
+/* Marco común de los textos legales. */
+import Base from '../layouts/Base.astro';
+import Migas from './Migas.astro';
+
+interface Props {
+  titulo: string;
+  descripcion: string;
+  /** «10 de noviembre de 2026» */
+  actualizado: string;
+}
+const { titulo, descripcion, actualizado } = Astro.props;
+const migas = [
+  { nombre: 'Inicio', ruta: '/' },
+  { nombre: titulo, ruta: Astro.url.pathname },
+];
+---
+
+<Base titulo={titulo} descripcion={descripcion}>
+  <div class="envoltura estrecha cabeza-pagina">
+    <Migas migas={migas} />
+    <h1>{titulo}</h1>
+    <p class="fecha">Última actualización: {actualizado}</p>
+  </div>
+  <section class="seccion">
+    <div class="envoltura estrecha">
+      <div class="prosa">
+        <slot />
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  h1 { font-size: clamp(2rem, 5.4vw, 3rem); }
+  .fecha { color: var(--gris); font-size: 0.92rem; margin: 0; }
+</style>

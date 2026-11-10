@@ -1,0 +1,51 @@
+---
+/* Foto de un producto o, si todavía no tiene, su ilustración. */
+import { Picture } from 'astro:assets';
+import type { Producto } from '../../compartido/catalogo.ts';
+import { ilustracionSvg } from '../../compartido/ilustraciones.ts';
+import { foto } from '../lib/imagenes.ts';
+
+interface Props {
+  producto: Producto;
+  /** Nombre de la foto a enseñar; por defecto, la primera del producto. */
+  nombre?: string;
+  /** Atributo sizes: cuánto ocupa la imagen en pantalla. */
+  tamanos?: string;
+  anchos?: number[];
+  /** true = es la imagen principal de la página: se carga la primera. */
+  principal?: boolean;
+  /** Texto alternativo. En las tarjetas va vacío: el nombre ya está escrito al lado. */
+  alt?: string;
+}
+
+const {
+  producto,
+  nombre = producto.fotos[0],
+  tamanos = '(min-width: 1040px) 280px, (min-width: 720px) 31vw, 46vw',
+  anchos = [240, 360, 480, 640],
+  principal = false,
+  alt,
+} = Astro.props;
+
+const imagen = foto(nombre);
+const textoAlt = alt ?? producto.fotoAlt ?? producto.nombre;
+---
+
+{
+  imagen ? (
+    <Picture
+      src={imagen}
+      alt={textoAlt}
+      widths={anchos.filter((a) => a <= imagen.width)}
+      sizes={tamanos}
+      formats={['webp']}
+      fallbackFormat="jpg"
+      quality={72}
+      loading={principal ? 'eager' : 'lazy'}
+      fetchpriority={principal ? 'high' : undefined}
+      decoding="async"
+    />
+  ) : (
+    <Fragment set:html={ilustracionSvg(producto.id, producto.ilustracion, alt === '' ? undefined : `Ilustración: ${producto.nombre}`)} />
+  )
+}
