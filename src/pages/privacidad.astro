@@ -55,7 +55,7 @@ const mesesPresupuestos = TIENDA.privacidad.mesesPresupuestos;
   {
     diasDestinatario !== null && (
       <p>
-        Estos datos y la dedicatoria <strong>se borran automáticamente a los {diasDestinatario} días de la entrega</strong>. Si das datos de otra
+        Estos datos, las indicaciones de entrega, la dedicatoria y las observaciones <strong>se borran automáticamente a los {diasDestinatario} días de la entrega</strong>. Si das datos de otra
         persona, asegúrate de que no le importa que los usemos para llevarle las flores.
       </p>
     )
@@ -70,7 +70,7 @@ const mesesPresupuestos = TIENDA.privacidad.mesesPresupuestos;
   <h2>Cuánto tiempo se guardan</h2>
   <ul>
     <li><strong>Pedidos:</strong> tus datos como comprador y los importes, durante los plazos que exigen las leyes contables y fiscales (hasta seis años).</li>
-    {diasDestinatario !== null && <li><strong>Datos de quien recibe las flores y dedicatoria:</strong> {diasDestinatario} días desde la entrega.</li>}
+    {diasDestinatario !== null && <li><strong>Datos de quien recibe las flores, indicaciones de entrega, dedicatoria y observaciones:</strong> {diasDestinatario} días desde la entrega.</li>}
     {mesesPresupuestos !== null && <li><strong>Solicitudes de presupuesto:</strong> {mesesPresupuestos} meses desde la solicitud.</li>}
     <li><strong>Pedidos que no llegan a pagarse:</strong> se borran con el resto de datos de entrega, en el mismo plazo.</li>
   </ul>
