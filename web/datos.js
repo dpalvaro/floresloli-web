@@ -5,7 +5,7 @@
    · Precio: escribe un número (ej. 25) o déjalo en null y la web dirá
      «Te decimos el precio por WhatsApp». No pongas el símbolo €.
    · Foto: nombre base de la foto en /fotos (la web usa las versiones
-     -600.jpg y -1000.jpg).
+     -600.webp y -1000.webp).
    · visible: false oculta un producto sin borrarlo.
    ===================================================================== */
 
