@@ -12,7 +12,8 @@ Floristería en C/ Río Alberche 30, Polígono (Toledo). Web hecha por impulsaDT
 | Documento | Para qué |
 |---|---|
 | [`docs/CONTEXTO.md`](docs/CONTEXTO.md) | Cómo está montada, cómo funciona y dónde se cambia cada cosa. **Empieza por aquí** |
-| [`docs/PUESTA-EN-MARCHA.md`](docs/PUESTA-EN-MARCHA.md) | Pasos en Cloudflare y en Stripe para publicarla y empezar a vender |
+| [`docs/PUESTA-EN-MARCHA.md`](docs/PUESTA-EN-MARCHA.md) | Pasos para publicarla y empezar a vender (vistas previas, Stripe y correo) |
+| [`docs/SERVIDOR.md`](docs/SERVIDOR.md) | El servidor propio donde vive la tienda: cómo se monta, cómo se publica, copias y seguridad |
 | [`docs/PENDIENTES.md`](docs/PENDIENTES.md) | Lo que falta por confirmar o recibir (se genera con `npm run comprobar`) |
 | [`CLAUDE.md`](CLAUDE.md) | Reglas para los agentes que trabajen en este repositorio |
 
@@ -34,9 +35,13 @@ npm run local
 
 Y abre http://localhost:8788. El panel está en http://localhost:8788/panel/.
 
+Para probarla tal como corre en el servidor propio, usa `npm run local:servidor` en lugar de `npm run local`.
+
 ## Publicar
 
-La web está en Cloudflare Pages, conectada a este repositorio. Cada cambio que entra en la rama `main` se publica solo en un par de minutos. Los cambios que prepara Claude llegan como petición de revisión con su vista previa; al aprobarla y fusionarla, se publican.
+La tienda vive en un servidor propio en la Unión Europea, con su dominio ([`docs/SERVIDOR.md`](docs/SERVIDOR.md)). Se sacó de Cloudflare el 22/11/2026 porque los bloqueos de LaLiga tumban muchas webs de Cloudflare los días de partido.
+
+Cada cambio que entra en la rama `main` se publica solo: GitHub pasa las pruebas, compila y lo manda al servidor, que vuelve a la versión anterior si la nueva no responde. Los cambios que prepara Claude llegan como petición de revisión con su vista previa en Cloudflare Pages; al aprobarla y fusionarla, se publican.
 
 ## Origen de fotos y vídeos
 

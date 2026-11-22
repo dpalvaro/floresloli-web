@@ -1,5 +1,5 @@
 /* =====================================================================
-   ESQUEMA DE LA BASE DE DATOS (Cloudflare D1, SQLite)
+   ESQUEMA DE LA BASE DE DATOS (SQLite: archivo en el servidor propio, D1 en Cloudflare)
 
    La API crea y actualiza las tablas sola la primera vez que se usa:
    no hay que ejecutar nada a mano. Para cambiar el esquema, AÑADE una

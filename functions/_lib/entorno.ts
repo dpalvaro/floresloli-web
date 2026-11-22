@@ -1,8 +1,9 @@
 /* =====================================================================
    ENTORNO Y ESTADO DE LA TIENDA
 
-   La API decide sola en qué modo está, según lo que tenga configurado
-   en Cloudflare (Settings › Variables and Secrets y Bindings):
+   La API decide sola en qué modo está, según lo que tenga configurado:
+   en el servidor propio, /etc/floresloli/entorno (docs/SERVIDOR.md); en
+   las vistas previas de Cloudflare, Settings › Variables and Secrets y Bindings.
 
    · Sin base de datos o sin pago configurado → la web sigue funcionando
      como catálogo y los encargos van por WhatsApp.
@@ -35,6 +36,12 @@ export interface Env {
   CORREO_REMITENTE?: string;
   /** Opcional: a qué correo llegan los avisos de pedido. Por defecto, el de la tienda. */
   CORREO_AVISOS?: string;
+  /**
+   * Dirección de la tienda en su servidor propio (https://dominio). En el servidor fija la
+   * dirección de las peticiones; en la producción de Cloudflare hace que la dirección
+   * antigua (….pages.dev) lleve a esta (functions/_middleware.ts).
+   */
+  URL_PUBLICA?: string;
 }
 
 export function entornoDe(env: Env): Entorno {

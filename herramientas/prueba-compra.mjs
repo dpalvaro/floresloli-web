@@ -15,6 +15,7 @@ import { readFileSync } from 'node:fs';
 const BASE = process.env.BASE ?? 'http://127.0.0.1:8788';
 const clave = process.env.PANEL_CLAVE ?? /^PANEL_CLAVE=(.*)$/m.exec(readFileSync(new URL('../.dev.vars', import.meta.url), 'utf8'))?.[1]?.trim();
 // En local, el límite de intentos va por IP: cada ejecución usa una distinta para no chocar con la anterior.
+// Wrangler la toma de CF-Connecting-IP; el servidor propio, de X-Real-IP (solo si la petición sale de la misma máquina).
 const ip = `10.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`;
 let cookie = '';
 let fallos = 0;
@@ -27,7 +28,7 @@ const comprobar = (condicion, texto) => {
 async function pedir(ruta, { metodo = 'GET', cuerpo } = {}) {
   const respuesta = await fetch(BASE + ruta, {
     method: metodo,
-    headers: { 'CF-Connecting-IP': ip, ...(cuerpo ? { 'Content-Type': 'application/json' } : {}), ...(cookie ? { Cookie: cookie } : {}) },
+    headers: { 'CF-Connecting-IP': ip, 'X-Real-IP': ip, ...(cuerpo ? { 'Content-Type': 'application/json' } : {}), ...(cookie ? { Cookie: cookie } : {}) },
     body: cuerpo ? JSON.stringify(cuerpo) : undefined,
   });
   const galleta = respuesta.headers.get('set-cookie');

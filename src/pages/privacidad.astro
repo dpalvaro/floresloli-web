@@ -8,7 +8,7 @@ const diasDestinatario = TIENDA.privacidad.diasDatosDestinatario;
 const mesesPresupuestos = TIENDA.privacidad.mesesPresupuestos;
 ---
 
-<PaginaLegal titulo="Política de privacidad" descripcion={`Qué datos personales trata ${NEGOCIO.nombre}, para qué, durante cuánto tiempo y cómo ejercer tus derechos.`} actualizado="10 de noviembre de 2026">
+<PaginaLegal titulo="Política de privacidad" descripcion={`Qué datos personales trata ${NEGOCIO.nombre}, para qué, durante cuánto tiempo y cómo ejercer tus derechos.`} actualizado="22 de noviembre de 2026">
   <h2>Quién es responsable de tus datos</h2>
   <ul>
     <li><strong>Responsable:</strong> {L.titular} ({NEGOCIO.nombre})</li>
@@ -78,7 +78,7 @@ const mesesPresupuestos = TIENDA.privacidad.mesesPresupuestos;
   <h2>Quién más interviene</h2>
   <p>Tus datos no se venden ni se ceden. Para que la tienda online funcione, intervienen estos proveedores, que actúan por encargo y solo para prestar su servicio:</p>
   <ul>
-    <li><strong>Cloudflare</strong> (Cloudflare, Inc.): aloja la web y la base de datos de pedidos.</li>
+    <li><strong>{NEGOCIO.alojamiento.proveedor}</strong> ({NEGOCIO.alojamiento.empresa}): aloja la web y la base de datos de pedidos{NEGOCIO.alojamiento.ue ? ', en centros de datos de la Unión Europea' : ''}.</li>
     <li><strong>Stripe</strong> (Stripe Payments Europe, Ltd., Irlanda): procesa el pago y manda el justificante.</li>
     <li><strong>Resend</strong> (Plus Five Five, Inc.): envía los correos de confirmación del pedido, si este servicio está activado.</li>
     <li><strong>impulsaDT</strong>: mantiene la web por encargo de la tienda.</li>

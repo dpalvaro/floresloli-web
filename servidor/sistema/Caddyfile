@@ -1,0 +1,45 @@
+# Caddy, delante de la tienda: HTTPS automático (Let's Encrypt), HTTP/2 y 3,
+# compresión, HSTS y la IP real del cliente para la tienda, que solo escucha
+# en 127.0.0.1. Las cabeceras de seguridad de cada página salen de _headers.
+# Plantilla: preparar.sh cambia {{DOMINIO}} y {{CORREO}} y la instala en /etc/caddy/Caddyfile.
+
+{
+	email {{CORREO}}
+}
+
+{{DOMINIO}} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	request_body {
+		max_size 2MB
+	}
+
+	reverse_proxy 127.0.0.1:8788 {
+		# Siempre la escribe Caddy: el cliente no la puede falsear
+		header_up X-Real-IP {remote_host}
+		# Mientras la tienda se reinicia al publicar, Caddy espera en vez de dar error
+		lb_try_duration 15s
+		lb_try_interval 250ms
+	}
+
+	# Registro de accesos: 14 días como mucho (lleva IP). Caddy no guarda cookies ni claves.
+	log {
+		output file /var/log/caddy/tienda.log {
+			roll_size 20MiB
+			roll_keep 10
+			roll_keep_for 336h
+		}
+		format json
+	}
+}
+
+# WWW-INICIO
+www.{{DOMINIO}} {
+	redir https://{{DOMINIO}}{uri} permanent
+}
+# WWW-FIN

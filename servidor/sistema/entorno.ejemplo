@@ -1,0 +1,26 @@
+# Configuración de la tienda en el servidor. Vive en /etc/floresloli/entorno y solo root la lee.
+# Se cambia con:   sudoedit /etc/floresloli/entorno
+# y después:       sudo systemctl restart floresloli
+# Nunca la subas a GitHub ni la mandes por correo o WhatsApp.
+
+ENTORNO=produccion
+URL_PUBLICA=https://{{DOMINIO}}
+BASE_DATOS=/var/lib/floresloli/tienda.sqlite
+PUERTO=8788
+DIRECCION=127.0.0.1
+
+# Panel de pedidos (/panel/). Generados al preparar el servidor. La clave se la das a Loli.
+PANEL_CLAVE={{PANEL_CLAVE}}
+SECRETO_SESION={{SECRETO_SESION}}
+
+# Stripe: claves REALES (sk_live_…) y el secreto (whsec_…) del webhook de
+# https://{{DOMINIO}}/api/stripe/webhook. Mientras estén vacías, la web funciona
+# como catálogo y los encargos van por WhatsApp.
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+
+# Correos propios con Resend (opcional; hace falta el dominio verificado en Resend).
+# CORREO_REMITENTE, por ejemplo: Flores y Plantas Loli <pedidos@{{DOMINIO}}>
+RESEND_API_KEY=
+CORREO_REMITENTE=
+CORREO_AVISOS=

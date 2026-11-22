@@ -2,7 +2,7 @@
 
 Documento para quien retome este proyecto, sea una persona, otro chat o un agente. Léelo entero antes de tocar nada: explica qué hay hecho, cómo funciona, dónde se cambia cada cosa y qué falta.
 
-Última actualización: martes 10 de noviembre de 2026.
+Última actualización: domingo 22 de noviembre de 2026 (producción en servidor propio).
 
 ---
 
@@ -11,7 +11,7 @@ Documento para quien retome este proyecto, sea una persona, otro chat o un agent
 - **Cliente:** Flores y Plantas Loli, floristería en C/ Río Alberche 30, Polígono (Santa María de Benquerencia), 45007 Toledo. Cliente piloto de la agencia impulsaDT (Álvaro).
 - **Qué es esto:** la web definitiva con tienda online (tarea **T39** del centro de mando; fecha límite 13/12/2026). Sustituye a la landing de Todos los Santos, que era una sola página en la carpeta `web/` y ya no existe en esta rama.
 - **Rama:** `claude/T39-tienda-online-v1`, con petición de revisión contra `main`. **`main` es producción**: lo que entra en `main` se publica solo. Nadie más que Álvaro fusiona.
-- **Estado:** toda la estructura está hecha y probada en local (web, cesta, pedido, pago, panel de Loli y base de datos). **No está publicada ni vende todavía.** Faltan datos del negocio (precios, logo, fotos), las cuentas (Stripe, base de datos en Cloudflare) y unas confirmaciones con Loli. La lista exacta está en [`PENDIENTES.md`](PENDIENTES.md) y los pasos para publicarla, en [`PUESTA-EN-MARCHA.md`](PUESTA-EN-MARCHA.md).
+- **Estado:** toda la estructura está hecha y probada en local (web, cesta, pedido, pago, panel de Loli y base de datos). **No está publicada ni vende todavía.** Faltan datos del negocio (precios, logo, fotos), las cuentas (servidor propio, dominio y Stripe) y unas confirmaciones con Loli. La lista exacta está en [`PENDIENTES.md`](PENDIENTES.md) y los pasos para publicarla, en [`PUESTA-EN-MARCHA.md`](PUESTA-EN-MARCHA.md).
 
 ### La regla más importante: nada sin confirmar llega al público
 
@@ -31,8 +31,9 @@ Los productos de ejemplo son los habituales de una floristería (ramos, rosas, p
 ## 2. Cómo está montado
 
 - **Astro 7** genera la web como archivos estáticos (carpeta `dist/`). Sin frameworks de interfaz: HTML, CSS y TypeScript pequeño.
-- **Cloudflare Pages** la publica. La carpeta `functions/` son **Pages Functions**: la API (`/api/...`), que se ejecuta en Cloudflare.
-- **Cloudflare D1** (SQLite) guarda pedidos, días, presupuestos y límites de uso. La API crea las tablas sola.
+- **Producción: servidor propio** en la Unión Europea, con dominio propio ([`SERVIDOR.md`](SERVIDOR.md)). Caddy pone el HTTPS y `servidor/` (Node, sin dependencias) sirve la web y ejecuta la API de `functions/` igual que Cloudflare. Se publica solo al fusionar en `main` (GitHub Actions). Se sacó de Cloudflare el 22/11/2026 por los bloqueos de LaLiga, que dejan sin servicio muchas webs de Cloudflare los días de partido.
+- **Vistas previas: Cloudflare Pages.** La carpeta `functions/` son **Pages Functions**: la API (`/api/...`). Es la misma en los dos sitios.
+- **SQLite** guarda pedidos, días, presupuestos y límites de uso: un archivo en el servidor propio (copia cifrada cada noche) y D1 en las vistas previas. La API crea las tablas sola.
 - **Stripe Checkout** cobra. La página de pago es de Stripe: la web nunca ve datos de tarjeta. Sin dependencias: se llama a la API de Stripe con `fetch`.
 - **Resend** (opcional) manda correos de aviso. Sin él, el cliente recibe el justificante de Stripe y Loli ve los pedidos en el panel.
 - **Sin cookies de terceros, sin analítica y sin cuentas de cliente** (decisión del 28/10/2026). La cesta vive en el navegador.
@@ -60,6 +61,11 @@ src/
 functions/
   api/                 Los puntos de entrada de la API (ver la tabla de abajo).
   _lib/                Base de datos, esquema, Stripe, correo, sesión del panel, estado de la tienda.
+  _middleware.ts       En la producción de Cloudflare, lleva la dirección antigua (pages.dev) al dominio propio.
+servidor/              La tienda en Node para el servidor propio: rutas de functions/, SQLite con la forma de D1
+                       y archivos de dist/ con las cabeceras de _headers. sistema/: preparación del VPS,
+                       servicio, Caddy, despliegue y copias (ver SERVIDOR.md).
+.github/workflows/     Pruebas en cada petición de revisión y publicación en el servidor al fusionar en main.
 public/                Lo que se copia tal cual: tipografías, vídeo, iconos, imagen de compartir, _headers.
 herramientas/          comprobar.mjs, prueba-compra.mjs, imagenes-sociales.mjs.
 pruebas/               Pruebas automáticas de las reglas (npm test).
@@ -150,7 +156,8 @@ Hace falta Node 22.12 o superior.
 npm install
 cp .dev.vars.example .dev.vars   # y pon una clave de panel y un secreto
 
-npm run local          # compila y arranca todo (web + API + base de datos local) en http://localhost:8788
+npm run local          # compila y arranca todo con Cloudflare (wrangler) en http://localhost:8788
+npm run local:servidor # lo mismo, pero con el servidor propio (como en producción), base de datos en .datos/
 npm run dev            # solo la web, con recarga al guardar, en http://localhost:4321 (la API, con `npm run api` en otra terminal)
 
 npm test               # pruebas de las reglas de la tienda
@@ -202,6 +209,8 @@ Normas de la agencia que se aplican aquí (están en el `CLAUDE.md` de `impulsad
 | Cambiar las normas del hospital | `src/pages/flores-hospital-universitario-toledo.astro` | Constante `AVISO_UNIDADES` y las preguntas |
 | Revisar los textos legales | `src/pages/aviso-legal.astro`, `privacidad.astro`, `cookies.astro`, `condiciones-de-venta.astro` | |
 | Cambiar la base de datos | `functions/_lib/esquema.ts` | **Añade** una migración al final; nunca edites una publicada |
+| Cambiar el proveedor del servidor | `compartido/negocio.ts` → `alojamiento` | Sale en la política de privacidad |
+| Cambiar claves (Stripe, panel, correo) | En el servidor: `/etc/floresloli/entorno` | Nunca en el código. Pasos en `SERVIDOR.md` |
 | Dar por cerrado un pendiente | `compartido/pendientes.ts` | Borra su entrada y lanza `npm run comprobar` |
 
 ---
@@ -211,6 +220,8 @@ Normas de la agencia que se aplican aquí (están en el `CLAUDE.md` de `impulsad
 | Decisión | Por qué |
 |---|---|
 | Web propia con Astro, Cloudflare Pages, D1 y Stripe | Decidido el 28/10/2026 (`decisiones.md`): código, dominio y cuentas a nombre de Loli, con coste contenido |
+| Producción en servidor propio en la UE (22/11/2026) | Los bloqueos de LaLiga tumban webs de Cloudflare los días de partido. Una IP solo para la tienda evita compartir dirección con webs piratas. Decisión de Álvaro, con la seguridad por delante |
+| El servidor sin dependencias, la API sin cambios | Menos que mantener y nada de terceros que pueda colar código. La misma API sirve en Cloudflare (vistas previas) y en el servidor |
 | Dos entornos y etiquetas `ejemplo` / `precioConfirmado` | Permite dejar toda la tienda montada sin publicar precios ni productos que Loli no ha confirmado |
 | Sin Stripe, la web sigue funcionando por WhatsApp | La web se puede publicar ya como catálogo y encender el pago cuando estén las cuentas, sin tocar código |
 | El servidor recalcula todos los importes | Lo que manda el navegador no es de fiar |
@@ -232,10 +243,10 @@ Normas de la agencia que se aplican aquí (están en el `CLAUDE.md` de `impulsad
 
 ## 9. Qué falta, en orden
 
-1. **Cloudflare** (Álvaro): cambiar la compilación del proyecto, crear las bases de datos y poner las variables. Sin esto la rama no se puede ni previsualizar. → `PUESTA-EN-MARCHA.md`, pasos 1 a 4.
+1. **Servidor propio y dominio** (Álvaro): contratar el VPS y el dominio, prepararlo y dejar los datos en GitHub. → `SERVIDOR.md`. Para las vistas previas: `PUESTA-EN-MARCHA.md`, apartado 1.
 2. **Con Loli** (segunda entrevista, T11 y T15): productos y precios reales, logo, fotos, hora límite, cupo, festivos, zonas de reparto y compromisos de las condiciones de venta.
 3. **Con el gestor** (T18): IVA de complementos y envío, y cómo se factura.
-4. **Stripe** a nombre de Loli y las claves reales en Cloudflare. → `PUESTA-EN-MARCHA.md`, paso 5.
+4. **Stripe** a nombre de Loli y las claves reales en el servidor. → `PUESTA-EN-MARCHA.md`, apartado 3.
 5. **Hospital** (T17): normas reales sobre flores y entregas.
 6. **Legal** (T16 y T19): revisión de los textos y encargo de tratamiento.
 7. **Diez pedidos de prueba** con Loli usando el panel (T23) y, entonces, fusionar en `main`.
