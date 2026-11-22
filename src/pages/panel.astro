@@ -44,8 +44,8 @@ const aTexto = (dato: unknown) => JSON.stringify(dato).replace(/</g, '\\u003c');
         <button class="boton grande ancho" type="submit">Entrar</button>
       </form>
       <p class="aviso ambar" data-sin-configurar hidden>
-        El panel todavía no tiene clave. Hay que poner las variables <code>PANEL_CLAVE</code> y <code>SECRETO_SESION</code> en Cloudflare
-        (pasos en <code>docs/PUESTA-EN-MARCHA.md</code>).
+        El panel todavía no tiene clave. Hay que poner las variables <code>PANEL_CLAVE</code> y <code>SECRETO_SESION</code> en la configuración
+        de la tienda (pasos en <code>docs/SERVIDOR.md</code>).
       </p>
       <p class="aviso ambar" data-sin-base hidden>
         Falta la base de datos: hay que crear la base D1 y enlazarla con el nombre <code>DB</code> (pasos en <code>docs/PUESTA-EN-MARCHA.md</code>).

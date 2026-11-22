@@ -1,17 +1,19 @@
 # floresloli-web · Web y tienda online de Flores y Plantas Loli
 
-Web pública con tienda online de Flores y Plantas Loli (C/ Río Alberche 30, Polígono, Toledo), hecha por impulsaDT. Astro + Cloudflare Pages (con Functions) + base de datos D1 + Stripe Checkout.
+Web pública con tienda online de Flores y Plantas Loli (C/ Río Alberche 30, Polígono, Toledo), hecha por impulsaDT. Astro + API como Pages Functions + SQLite + Stripe Checkout. Producción en un servidor propio en la UE; vistas previas en Cloudflare Pages.
 
-**Antes de tocar nada, lee `docs/CONTEXTO.md`**: explica cómo está montada, cómo funciona un pedido, dónde se cambia cada cosa y qué falta. Los pasos de publicación están en `docs/PUESTA-EN-MARCHA.md` y la lista de pendientes, en `docs/PENDIENTES.md`.
+**Antes de tocar nada, lee `docs/CONTEXTO.md`**: explica cómo está montada, cómo funciona un pedido, dónde se cambia cada cosa y qué falta. Los pasos de publicación están en `docs/PUESTA-EN-MARCHA.md`, el servidor en `docs/SERVIDOR.md` y la lista de pendientes en `docs/PENDIENTES.md`.
 
 Las reglas generales de la agencia están en el repositorio `dpalvaro/impulsadt-operaciones` (`CLAUDE.md`, la habilidad `desarrollo-web` y la memoria de `clientes/loli/`). Lo de aquí las completa.
 
 ## Publicación
 
-- Cloudflare Pages, proyecto `floresyplantasloli`. Se compila con `npm run build` y se publica la carpeta `dist/`.
-- `main` es producción: lo que entra en `main` sale a la web en un par de minutos.
-- Cada rama y cada petición de revisión tiene su vista previa. Los agentes trabajan en ramas `claude/` y nunca suben a `main`.
-- Los agentes no cambian la configuración de Cloudflare ni de Stripe, ni las claves: eso lo hace Álvaro (`docs/PUESTA-EN-MARCHA.md`).
+- **Producción: servidor propio** (`docs/SERVIDOR.md`). Al entrar algo en `main`, GitHub Actions (`.github/workflows/publicar.yml`) pasa las pruebas, compila para producción y lo publica en el servidor en unos minutos. Si la versión nueva no responde, el servidor vuelve solo a la anterior.
+- Se sacó de Cloudflare el 22/11/2026 por los bloqueos de LaLiga. No propongas volver a Cloudflare ni poner el dominio detrás de su proxy.
+- **Vistas previas: Cloudflare Pages**, proyecto `floresyplantasloli`. Cada rama y cada petición de revisión tiene la suya. Se compila con `npm run build` y se publica `dist/`.
+- `main` es producción. Los agentes trabajan en ramas `claude/` y nunca suben a `main`.
+- Los agentes no tocan el servidor, Cloudflare, Stripe, los secretos de GitHub ni las claves: eso lo hace Álvaro. Un cambio en `servidor/` o en el flujo de publicación va, como todo, en una rama con petición de revisión.
+- El servidor no lleva dependencias: `servidor/` usa solo lo que trae Node. No añadas paquetes de npm al código que corre en producción (`servidor/`, `functions/` y `compartido/`).
 - Dirección pública: `https://floresyplantasloli.pages.dev`. Está en `compartido/negocio.ts` (`web.url`) y en `astro.config.mjs` (`SITIO`). Si cambia, se cambia en los dos.
 
 ## Dos entornos
@@ -41,12 +43,13 @@ Las reglas generales de la agencia están en el repositorio `dpalvaro/impulsadt-
 ```
 npm install
 cp .dev.vars.example .dev.vars
-npm run local            # web + API + base de datos local en http://localhost:8788
+npm run local            # web + API + base de datos local en http://localhost:8788 (con Cloudflare/wrangler)
+npm run local:servidor   # lo mismo con el servidor propio, como en producción
 ```
 
 Antes de cada petición de revisión:
 
-- `npm test`, `npm run tipos`, `npm run comprobar` y, con `npm run local` en marcha, `npm run prueba:compra`: todo sin fallos.
+- `npm test`, `npm run tipos`, `npm run comprobar` y, con `npm run local` o `npm run local:servidor` en marcha, `npm run prueba:compra`: todo sin fallos. GitHub Actions lo repite en cada petición de revisión.
 - Con un móvil de 390 px de ancho: sin errores en la consola ni desplazamiento horizontal.
 - Un pedido completo: producto › cesta › pedido › pago de prueba › confirmación, y que aparece en `/panel/`.
 - Que, sin poder cobrar, el botón de la cesta abre `wa.me/34635543763` con el encargo escrito.

@@ -70,6 +70,18 @@ export const NEGOCIO = {
   },
 
   /**
+   * Quién aloja la web y la base de datos de pedidos (sale en la política de privacidad).
+   * Desde el 22/11/2026, un servidor propio en la Unión Europea fuera de Cloudflare, por los
+   * bloqueos de LaLiga (docs/SERVIDOR.md). PENDIENTE: confirmar el proveedor al contratarlo.
+   */
+  alojamiento: {
+    proveedor: 'OVHcloud',
+    empresa: 'OVH SAS, Francia',
+    /** true = los datos se quedan en centros de datos de la Unión Europea. */
+    ue: true,
+  },
+
+  /**
    * PENDIENTE: logo en buena calidad (T15). Cuando llegue: guárdalo en
    * src/assets/logo.svg (o .png) y pon aquí el nombre del archivo.
    * Mientras sea null, la cabecera escribe el nombre con la tipografía de la web.

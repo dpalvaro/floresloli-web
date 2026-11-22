@@ -1,0 +1,29 @@
+# Copia diaria cifrada de la base de datos de la tienda (la lanza floresloli-copia.timer).
+
+[Unit]
+Description=Copia cifrada de la base de datos de la tienda
+After=floresloli.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/floresloli-copia
+Nice=10
+IOSchedulingClass=idle
+
+# Aislamiento: sin red, y solo puede escribir donde están la base de datos y las copias
+CapabilityBoundingSet=CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH
+NoNewPrivileges=yes
+PrivateNetwork=yes
+RestrictAddressFamilies=AF_UNIX
+ProtectSystem=strict
+ReadWritePaths=/var/lib/floresloli /var/backups/floresloli
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+UMask=0077

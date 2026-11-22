@@ -1,8 +1,8 @@
 # Pendientes de la tienda
 
-Generado con `npm run comprobar` el 10/11/2026. No edites este archivo: la lista sale de `compartido/pendientes.ts`.
+Generado con `npm run comprobar` el 22/11/2026. No edites este archivo: la lista sale de `compartido/pendientes.ts`.
 
-Abiertos: **31** (15 hay que cerrarlos antes de vender; 2, antes de publicar).
+Abiertos: **33** (15 hay que cerrarlos antes de vender; 5, antes de publicar).
 
 ## Detectado automáticamente
 
@@ -48,12 +48,14 @@ Abiertos: **31** (15 hay que cerrarlos antes de vender; 2, antes de publicar).
 
 | Qué falta | Qué hay puesto mientras tanto | Dónde se cambia | Quién | Tarea | Cuándo |
 |---|---|---|---|---|---|
-| Decidir la pasarela de pago y abrir la cuenta a nombre de Loli. Stripe es la recomendada y la que está integrada. | Sin claves, la web pública no cobra: funciona como catálogo y los encargos van por WhatsApp. En las vistas de prueba el pago es simulado. | Cloudflare Pages → Settings → Variables and Secrets: STRIPE_SECRET_KEY y STRIPE_WEBHOOK_SECRET (docs/PUESTA-EN-MARCHA.md) | Álvaro y Loli | T39 | Antes de vender |
+| Decidir la pasarela de pago y abrir la cuenta a nombre de Loli. Stripe es la recomendada y la que está integrada. | Sin claves, la web pública no cobra: funciona como catálogo y los encargos van por WhatsApp. En las vistas de prueba el pago es simulado. | Servidor propio: /etc/floresloli/entorno → STRIPE_SECRET_KEY y STRIPE_WEBHOOK_SECRET (docs/PUESTA-EN-MARCHA.md, apartado 3) | Álvaro y Loli | T39 | Antes de vender |
 | Si se activa Bizum además de la tarjeta (se hace en el panel de Stripe, sin tocar código). | Los textos de la web hablan solo de tarjeta. | Panel de Stripe → Métodos de pago; después compartido/tienda.ts → pago.bizum: true | Álvaro y Loli |  | Se puede lanzar sin ello |
-| Cambiar la configuración del proyecto de Cloudflare Pages (orden de compilación y carpeta), crear la base de datos D1 y poner las variables. La cuenta pasa a nombre de Loli con la tienda. | El proyecto actual publica la carpeta web/ sin compilar: con esa configuración esta rama no se puede previsualizar. | Panel de Cloudflare (docs/PUESTA-EN-MARCHA.md, pasos 1 a 4) | Álvaro |  | Antes de publicar |
-| Clave del panel de pedidos y secreto de sesión. | Sin ellos nadie puede entrar en el panel. | Cloudflare Pages → Variables and Secrets: PANEL_CLAVE y SECRETO_SESION | Álvaro |  | Antes de vender |
-| Dominio propio para la tienda (a nombre de Loli). | https://floresyplantasloli.pages.dev | compartido/negocio.ts → web.url y astro.config.mjs → SITIO (las dos a la vez) | Álvaro y Loli |  | Se puede lanzar sin ello |
-| Correos automáticos al cliente y a la tienda con cada pedido (hace falta un dominio propio verificado en Resend). | Sin correo propio: el cliente recibe el justificante de Stripe y Loli ve los pedidos en el panel. | Cloudflare Pages → Variables and Secrets: RESEND_API_KEY, CORREO_REMITENTE y CORREO_AVISOS | Álvaro |  | Se puede lanzar sin ello |
+| Contratar el servidor propio (VPS en la UE), prepararlo con servidor/sistema/preparar.sh y dejar en GitHub los datos para publicar. Decidido el 22/11/2026 por los bloqueos de LaLiga a Cloudflare. | Sin servidor, main solo se publica en Cloudflare (pages.dev), que los días de partido puede no cargar en España. | docs/SERVIDOR.md, pasos 1 a 8 | Álvaro | T39 | Antes de publicar |
+| Confirmar el proveedor del servidor al contratarlo (el recomendado es OVHcloud) y que los datos quedan en la Unión Europea. | La política de privacidad dice OVHcloud (OVH SAS, Francia), en centros de datos de la Unión Europea. | compartido/negocio.ts → alojamiento | Álvaro |  | Antes de publicar |
+| Base de datos y claves de las vistas previas de Cloudflare, para probar la tienda con Loli (diez pedidos de prueba, T23). La compilación ya está cambiada. | Sin base de datos, las vistas previas enseñan la tienda pero no guardan pedidos. | Panel de Cloudflare, solo el entorno Preview (docs/PUESTA-EN-MARCHA.md, apartado 1) | Álvaro |  | Antes de publicar |
+| Clave del panel de pedidos y secreto de sesión. | preparar.sh las genera al preparar el servidor; sin ellas nadie puede entrar en el panel. | Servidor propio: /etc/floresloli/entorno → PANEL_CLAVE y SECRETO_SESION. Vistas previas: Cloudflare, entorno Preview | Álvaro |  | Antes de vender |
+| Dominio propio para la tienda (a nombre de Loli). Hace falta para el servidor propio y su HTTPS. | https://floresyplantasloli.pages.dev | Registrador del dominio y DNS al servidor (docs/SERVIDOR.md, paso 3); después compartido/negocio.ts → web.url y astro.config.mjs → SITIO (las dos a la vez) | Álvaro y Loli |  | Antes de publicar |
+| Correos automáticos al cliente y a la tienda con cada pedido (hace falta un dominio propio verificado en Resend). | Sin correo propio: el cliente recibe el justificante de Stripe y Loli ve los pedidos en el panel. | Servidor propio: /etc/floresloli/entorno → RESEND_API_KEY, CORREO_REMITENTE y CORREO_AVISOS | Álvaro |  | Se puede lanzar sin ello |
 
 ## Fiscal y legal
 
@@ -65,7 +67,7 @@ Abiertos: **31** (15 hay que cerrarlos antes de vender; 2, antes de publicar).
 | Compromisos de las condiciones de venta: cambiar una flor por otra parecida, plazo para avisar de un problema, devolución si se cancela antes de prepararlo y hojas de reclamaciones. | Sustitución por flor parecida del mismo valor; aviso de problemas en 24 horas con foto; cancelación con devolución íntegra hasta el día anterior a la entrega; hojas de reclamaciones en la tienda. | compartido/tienda.ts → condiciones, y src/pages/condiciones-de-venta.astro | Loli |  | Antes de vender |
 | Domicilio de la titular a efectos del aviso legal. | Se usa la dirección de la tienda (C/ Río Alberche, 30). | compartido/negocio.ts → legal.domicilio | Loli |  | Se puede lanzar sin ello |
 | Cuánto tiempo se guardan los datos de quien recibe las flores (nombre, dirección, habitación y dedicatoria). | Se borran solos a los 90 días de la entrega; el resto del pedido se conserva para la contabilidad. | compartido/tienda.ts → privacidad.diasDatosDestinatario (null = no borrar nunca) | Álvaro |  | Se puede lanzar sin ello |
-| Contrato de encargo de tratamiento entre Loli e impulsaDT y registro de actividades, antes de guardar datos de clientes. | La política de privacidad nombra a los proveedores (Cloudflare, Stripe y, si se activa, Resend) y a impulsaDT como mantenimiento. | Documentos de la agencia; src/pages/privacidad.astro si cambia algún proveedor | Álvaro | T16 y T19 | Antes de vender |
+| Contrato de encargo de tratamiento entre Loli e impulsaDT y registro de actividades, antes de guardar datos de clientes. | La política de privacidad nombra a los proveedores (el del servidor, Stripe y, si se activa, Resend) y a impulsaDT como mantenimiento. | Documentos de la agencia; src/pages/privacidad.astro si cambia algún proveedor | Álvaro | T16 y T19 | Antes de vender |
 
 ## Decisiones
 

@@ -1,0 +1,151 @@
+# Pruebas en cada petición de revisión y publicación en el servidor propio al fusionar en main.
+#
+# Publicar necesita, en Settings › Environments › produccion › Environment secrets:
+#   SERVIDOR_HOST    IP del servidor
+#   SERVIDOR_HUELLA  línea de known_hosts del servidor (la imprime preparar.sh)
+#   SERVIDOR_CLAVE   clave privada de despliegue (su pública está en el servidor con un comando forzado:
+#                    solo puede publicar versiones)
+# Mientras no estén, se prueba todo pero no se publica. Pasos: docs/SERVIDOR.md.
+#
+# El paquete se compila en un trabajo sin secretos. La clave solo llega al último trabajo, en una
+# máquina aparte que no instala ni ejecuta nada de npm: un paquete de npm malicioso no la puede ver.
+
+name: Pruebas y publicación
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tienda-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  pruebas:
+    name: Pruebas
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Dependencias
+        run: npm ci --no-audit --no-fund
+
+      - name: Pruebas, tipos y coherencia
+        run: |
+          npm test
+          npm run tipos
+          npm run comprobar
+
+      - name: Compra completa contra el servidor propio (entorno de pruebas)
+        env:
+          ENTORNO: pruebas
+          PANEL_CLAVE: clave-solo-para-esta-prueba
+          SECRETO_SESION: secreto-solo-para-esta-prueba-de-integracion
+          BASE_DATOS: ${{ runner.temp }}/tienda.sqlite
+        run: |
+          npm run build
+          node --disable-warning=ExperimentalWarning servidor/servidor.ts > "$RUNNER_TEMP/servidor.log" 2>&1 &
+          SERVIDOR=$!
+          for _ in $(seq 1 30); do curl -fsS http://127.0.0.1:8788/api/estado > /dev/null 2>&1 && break; sleep 1; done
+          npm run prueba:compra || { cat "$RUNNER_TEMP/servidor.log"; exit 1; }
+          kill "$SERVIDOR"
+
+      - name: Compilación de producción sin nada de ejemplo
+        run: |
+          npm run build:produccion
+          if grep -rlE 'franja-pruebas|de ejemplo' dist --include='*.html'; then
+            echo "::error::La compilación de producción enseña productos, precios o avisos de ejemplo."
+            exit 1
+          fi
+
+  paquete:
+    name: Paquete de producción
+    needs: pruebas
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Compilar para producción
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build:produccion
+          if grep -rlE 'franja-pruebas|de ejemplo' dist --include='*.html'; then
+            echo "::error::La compilación de producción enseña cosas de ejemplo: no se publica."
+            exit 1
+          fi
+          # Solo lo que hace falta para funcionar: sin dependencias, sin .git y sin secretos
+          tar -czf "$RUNNER_TEMP/tienda.tgz" dist functions compartido servidor package.json
+          ls -la "$RUNNER_TEMP/tienda.tgz"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tienda
+          path: ${{ runner.temp }}/tienda.tgz
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+  publicar:
+    name: Publicar en el servidor
+    needs: paquete
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: produccion
+    steps:
+      - name: ¿Está el servidor configurado?
+        id: servidor
+        env:
+          HOST: ${{ secrets.SERVIDOR_HOST }}
+        run: |
+          if [ -z "$HOST" ]; then
+            echo "::notice::Todavía no hay servidor configurado (docs/SERVIDOR.md): no se publica."
+            echo "listo=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "listo=si" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: steps.servidor.outputs.listo == 'si'
+        with:
+          name: tienda
+          path: ${{ runner.temp }}/paquete
+
+      - name: Enviar al servidor
+        if: steps.servidor.outputs.listo == 'si'
+        env:
+          HOST: ${{ secrets.SERVIDOR_HOST }}
+          HUELLA: ${{ secrets.SERVIDOR_HUELLA }}
+          CLAVE: ${{ secrets.SERVIDOR_CLAVE }}
+        run: |
+          umask 077
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$HUELLA" > ~/.ssh/known_hosts
+          printf '%s\n' "$CLAVE" > ~/.ssh/despliegue
+          ssh -i ~/.ssh/despliegue -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes -o ConnectTimeout=20 \
+            "despliegue@$HOST" "publicar $GITHUB_SHA" < "$RUNNER_TEMP/paquete/tienda.tgz"
+
+      - name: Borrar la clave
+        if: always()
+        run: rm -f ~/.ssh/despliegue

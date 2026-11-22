@@ -1,0 +1,12 @@
+# Todas las noches hacia las 03:30 (hora de Madrid). Si el servidor estaba apagado, se hace al encender.
+
+[Unit]
+Description=Copia diaria de la base de datos de la tienda
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+RandomizedDelaySec=15m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

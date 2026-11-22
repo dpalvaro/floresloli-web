@@ -19,7 +19,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const tienda = estadoTienda(env);
   if (!tienda.panel) {
-    return fallo(503, 'sin-configurar', 'El panel todavía no tiene clave. Hay que poner PANEL_CLAVE y SECRETO_SESION en Cloudflare.');
+    return fallo(503, 'sin-configurar', 'El panel todavía no tiene clave. Hay que poner PANEL_CLAVE y SECRETO_SESION en la configuración de la tienda (docs/SERVIDOR.md).');
   }
   const clave = 'panel:' + (await sha256((env.SECRETO_SESION ?? '') + ipDe(request))).slice(0, 24);
   if (!(await permitir(env.DB!, clave, 6, 900))) {
