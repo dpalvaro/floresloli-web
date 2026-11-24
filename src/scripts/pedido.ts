@@ -264,6 +264,8 @@ function iniciar(form: HTMLFormElement, catalogo: ProductoCompra[], idsComplemen
     } else notaHospital.replaceChildren(...notaHospitalOriginal.map((n) => n.cloneNode(true)));
   }
 
+  let localidadPuesta = '';
+
   function pintarZona(): void {
     const cp = valor('cp');
     ayudaCp.textContent = '';
@@ -271,13 +273,18 @@ function iniciar(form: HTMLFormElement, catalogo: ProductoCompra[], idsComplemen
     if (metodo() !== 'domicilio' || !/^\d{5}$/.test(cp)) return;
     const zona = zonaDeCp(cp);
     if (zona && zona.precio !== null) {
-      ayudaCp.textContent = `Reparto en ${zona.nombre}: ${euros(zona.precio)}.`;
+      ayudaCp.textContent =
+        zona.km !== undefined
+          ? `Reparto a ${zona.nombre} (${zona.km} km desde la tienda): ${euros(zona.precio)}.`
+          : `Reparto en ${zona.nombre}: ${euros(zona.precio)}.`;
       ayudaCp.dataset.tipo = 'bien';
-      if (!valor('localidad') && zona.id === 'toledo') campo('localidad').value = 'Toledo';
+      // Rellena la localidad si está vacía o si la puso la web con otro código postal.
+      const localidad = campo('localidad');
+      if (!localidad.value || localidad.value === localidadPuesta) localidad.value = localidadPuesta = zona.localidad;
     } else {
       ayudaCp.textContent =
         modo() === 'whatsapp'
-          ? 'Fuera de Toledo capital el reparto depende de la distancia: te decimos el precio por WhatsApp.'
+          ? 'Ese código postal no está en nuestra lista de reparto: te decimos el precio por WhatsApp.'
           : TIENDA.entrega.domicilio.fueraDeZona;
       ayudaCp.dataset.tipo = 'aviso';
     }

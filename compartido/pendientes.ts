@@ -75,25 +75,6 @@ export const PENDIENTES: Pendiente[] = [
 
   /* ---------------- Reparto y fechas ---------------- */
   {
-    id: 'hora-limite',
-    area: 'Reparto y fechas',
-    que: 'Hora límite para pedir para el mismo día (la ficha dice «siempre que dé tiempo»).',
-    provisional: '12:00.',
-    donde: 'compartido/tienda.ts → horaLimiteMismoDia',
-    quien: 'Loli',
-    bloquea: 'venta',
-  },
-  {
-    id: 'cupo',
-    area: 'Reparto y fechas',
-    que: 'Cuántos pedidos de la web se aceptan por día.',
-    provisional: '12 al día. Se puede cambiar un día concreto desde el panel.',
-    donde: 'compartido/tienda.ts → cupoDiario',
-    quien: 'Loli (con el registro de pedidos de dos semanas)',
-    tarea: 'T10',
-    bloquea: 'venta',
-  },
-  {
     id: 'festivos',
     area: 'Reparto y fechas',
     que: 'Qué festivos cierra, los festivos locales de Toledo de 2027 y qué domingos señalados abre (San Valentín, domingo 14/02/2027; Día de la Madre, domingo 02/05/2027).',
@@ -104,35 +85,14 @@ export const PENDIENTES: Pendiente[] = [
     bloquea: 'venta',
   },
   {
-    id: 'zonas-de-reparto',
+    id: 'pueblos',
     area: 'Reparto y fechas',
-    que: 'Qué barrios y códigos postales entran en los 8 € y la tarifa de los pueblos cercanos (Layos, Cabañas…).',
+    que: 'Que Loli revise la lista de pueblos a 25 km o menos y sus km (si falta alguno o algún precio no le cuadra).',
     provisional:
-      'Los 8 códigos postales de Toledo capital (45001 a 45008) a 8 €. Cualquier otro código postal no se puede pagar en la web: se remite a WhatsApp.',
-    donde: 'compartido/tienda.ts → entrega.domicilio.zonas',
+      '15 pueblos, con los km por carretera desde la tienda hasta el centro del pueblo calculados con OpenStreetMap el 24/11/2026 y redondeados hacia arriba, a 1 € el km. Otro código postal se remite a WhatsApp.',
+    donde: 'compartido/tienda.ts → PUEBLOS',
     quien: 'Loli',
-    tarea: 'T15',
-    bloquea: 'venta',
-  },
-  {
-    id: 'hospital-precio',
-    area: 'Reparto y fechas',
-    que: 'Precio de la entrega en el Hospital Universitario de Toledo.',
-    provisional: '8 €, como el reparto en Toledo.',
-    donde: 'compartido/tienda.ts → entrega.hospital.precio',
-    quien: 'Loli',
-    bloquea: 'venta',
-  },
-  {
-    id: 'hospital-normas',
-    area: 'Reparto y fechas',
-    que: 'Normas del hospital sobre flores y entregas (qué unidades no las admiten, dónde se dejan y a qué horas).',
-    provisional:
-      'La página del hospital dice, sin concretar, que algunas unidades no admiten flores y que conviene preguntarlo en la planta. No promete horas.',
-    donde: 'src/pages/flores-hospital-universitario-toledo.astro (constante AVISO_UNIDADES y preguntas frecuentes)',
-    quien: 'Álvaro (llamada a Atención al Paciente)',
-    tarea: 'T17',
-    bloquea: 'publicar',
+    bloquea: 'no',
   },
   {
     id: 'pago-en-tienda',

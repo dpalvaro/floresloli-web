@@ -1,8 +1,8 @@
 # Pendientes de la tienda
 
-Generado con `npm run comprobar` el 22/11/2026. No edites este archivo: la lista sale de `compartido/pendientes.ts`.
+Generado con `npm run comprobar` el 24/11/2026. No edites este archivo: la lista sale de `compartido/pendientes.ts`.
 
-Abiertos: **33** (15 hay que cerrarlos antes de vender; 5, antes de publicar).
+Abiertos: **29** (11 hay que cerrarlos antes de vender; 4, antes de publicar).
 
 ## Detectado automáticamente
 
@@ -27,12 +27,8 @@ Abiertos: **33** (15 hay que cerrarlos antes de vender; 5, antes de publicar).
 
 | Qué falta | Qué hay puesto mientras tanto | Dónde se cambia | Quién | Tarea | Cuándo |
 |---|---|---|---|---|---|
-| Hora límite para pedir para el mismo día (la ficha dice «siempre que dé tiempo»). | 12:00. | compartido/tienda.ts → horaLimiteMismoDia | Loli |  | Antes de vender |
-| Cuántos pedidos de la web se aceptan por día. | 12 al día. Se puede cambiar un día concreto desde el panel. | compartido/tienda.ts → cupoDiario | Loli (con el registro de pedidos de dos semanas) | T10 | Antes de vender |
 | Qué festivos cierra, los festivos locales de Toledo de 2027 y qué domingos señalados abre (San Valentín, domingo 14/02/2027; Día de la Madre, domingo 02/05/2027). | Cerrado los domingos y los festivos nacionales y de Castilla-La Mancha de 2026 y 2027 (lista sin confirmar con el calendario oficial). Ningún domingo abierto. | compartido/tienda.ts → festivos y aperturasEspeciales (o día a día desde el panel, pestaña «Calendario») | Loli |  | Antes de vender |
-| Qué barrios y códigos postales entran en los 8 € y la tarifa de los pueblos cercanos (Layos, Cabañas…). | Los 8 códigos postales de Toledo capital (45001 a 45008) a 8 €. Cualquier otro código postal no se puede pagar en la web: se remite a WhatsApp. | compartido/tienda.ts → entrega.domicilio.zonas | Loli | T15 | Antes de vender |
-| Precio de la entrega en el Hospital Universitario de Toledo. | 8 €, como el reparto en Toledo. | compartido/tienda.ts → entrega.hospital.precio | Loli |  | Antes de vender |
-| Normas del hospital sobre flores y entregas (qué unidades no las admiten, dónde se dejan y a qué horas). | La página del hospital dice, sin concretar, que algunas unidades no admiten flores y que conviene preguntarlo en la planta. No promete horas. | src/pages/flores-hospital-universitario-toledo.astro (constante AVISO_UNIDADES y preguntas frecuentes) | Álvaro (llamada a Atención al Paciente) | T17 | Antes de publicar |
+| Que Loli revise la lista de pueblos a 25 km o menos y sus km (si falta alguno o algún precio no le cuadra). | 15 pueblos, con los km por carretera desde la tienda hasta el centro del pueblo calculados con OpenStreetMap el 24/11/2026 y redondeados hacia arriba, a 1 € el km. Otro código postal se remite a WhatsApp. | compartido/tienda.ts → PUEBLOS | Loli |  | Se puede lanzar sin ello |
 | Si se puede encargar en la web y pagar al recoger en la tienda (momento del cobro, sin confirmar en la ficha). | Desactivado: en la web se paga siempre al hacer el pedido. | compartido/tienda.ts → pagoEnTienda | Loli |  | Se puede lanzar sin ello |
 
 ## Fotos y marca

@@ -10,7 +10,6 @@ interface Props {
   sobrio?: boolean;
 }
 const { sobrio = false } = Astro.props;
-const envio = TIENDA.entrega.domicilio.zonas[0]?.precio;
 ---
 
 <div class="como-llega">
@@ -20,8 +19,8 @@ const envio = TIENDA.entrega.domicilio.zonas[0]?.precio;
       <strong>Recoger en la tienda.</strong> Gratis, en la calle Río Alberche, 30.
     </li>
     <li>
-      <strong>A domicilio en Toledo.</strong>
-      {envio != null ? ` ${euros(envio)}. ` : ' '}A los pueblos cercanos, según la distancia. <a href={RUTA_REPARTO}>Ver el reparto</a>
+      <strong>A domicilio.</strong>
+      {TIENDA.entrega.domicilio.resumen} <a href={RUTA_REPARTO}>Ver el reparto</a>
     </li>
     {
       !sobrio && (

@@ -38,7 +38,6 @@ const prueba = etiquetaDePrueba(p, ENTORNO);
 const variantes = p.variantes ?? [];
 const modelos = (p.modelos ?? []).map((nombre) => foto(nombre)).filter((m) => m !== undefined);
 const sobrio = !!categoria.sobrio;
-const envio = TIENDA.entrega.domicilio.zonas[0]?.precio;
 
 const fotoPrincipal = foto(p.fotos[0]);
 const fotosExtra = p.fotos.slice(1).filter((nombre) => foto(nombre));
@@ -206,7 +205,7 @@ const descripcionBuscadores = `${p.resumen} Hecho a mano en el Polígono de Tole
           <li>
             <Icono nombre="reparto" tamano={22} />
             <span>
-              A domicilio en Toledo{envio != null ? `, ${euros(envio)}` : ''}. <a href={RUTA_REPARTO}>Ver el reparto</a>
+              A domicilio: {TIENDA.entrega.domicilio.resumen.charAt(0).toLowerCase() + TIENDA.entrega.domicilio.resumen.slice(1)} <a href={RUTA_REPARTO}>Ver el reparto</a>
             </span>
           </li>
           {

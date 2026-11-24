@@ -10,7 +10,7 @@ import Base from '../layouts/Base.astro';
 import { catalogoCompra } from '../../compartido/catalogo.ts';
 import { NEGOCIO } from '../../compartido/negocio.ts';
 import { ESTADOS_MANUALES, nombreEstado } from '../../compartido/pedido.ts';
-import { METODOS_ENTREGA, TIENDA, nombreMetodo } from '../../compartido/tienda.ts';
+import { METODOS_ENTREGA, TIENDA, nombreMetodo, precioZona } from '../../compartido/tienda.ts';
 import { ENTORNO } from '../lib/entorno.ts';
 
 /* Nombres y precios para rellenar más deprisa un pedido apuntado a mano. Sin precios sin confirmar. */
@@ -21,7 +21,7 @@ const datos = {
       : [{ nombre: p.nombre, precio: p.aMedida ? null : p.precio, iva: p.iva }],
   ),
   estados: ESTADOS_MANUALES.map((id) => ({ id, nombre: nombreEstado(id) })),
-  envioToledo: TIENDA.entrega.domicilio.zonas[0]?.precio ?? 0,
+  envioToledo: precioZona('toledo') ?? 0,
   envioHospital: TIENDA.entrega.hospital.precio,
 };
 const aTexto = (dato: unknown) => JSON.stringify(dato).replace(/</g, '\\u003c');

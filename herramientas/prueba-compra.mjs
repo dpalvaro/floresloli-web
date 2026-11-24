@@ -87,7 +87,7 @@ comprobar(r.estado === 201 && r.datos.url.includes('/pedido/pago-de-prueba/'), '
 const { ref, token } = r.datos;
 
 r = await pedir(`/api/pedidos/${ref}?t=${token}`);
-comprobar(r.datos.estado === 'pendiente_pago' && r.datos.total === 4500 + 3500 + 800, `El servidor calcula el total: ${r.datos.total / 100} €`);
+comprobar(r.datos.estado === 'pendiente_pago' && r.datos.total === 4500 + 3500 + 500, `El servidor calcula el total (reparto en el Polígono, 5 €): ${r.datos.total / 100} €`);
 comprobar((await pedir(`/api/pedidos/${ref}?t=otro`)).estado === 404, 'Sin el código del pedido no se puede consultar');
 
 r = await pedir('/api/pruebas/pago', { metodo: 'POST', cuerpo: { ref, token, resultado: 'pagado' } });

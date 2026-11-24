@@ -6,13 +6,12 @@
 import PaginaLegal from '../components/PaginaLegal.astro';
 import { euros } from '../../compartido/catalogo.ts';
 import { NEGOCIO, domicilioLegal, direccionCompleta, enlaceTelefono } from '../../compartido/negocio.ts';
-import { TIENDA } from '../../compartido/tienda.ts';
+import { TIENDA, precioZona } from '../../compartido/tienda.ts';
 import { RUTA_HOSPITAL, RUTA_REPARTO } from '../lib/rutas.ts';
 
 const L = NEGOCIO.legal;
 const horaLimite = TIENDA.horaLimiteMismoDia.replace(/^0/, '');
 const C = TIENDA.condiciones;
-const envio = TIENDA.entrega.domicilio.zonas[0]?.precio;
 const formasDePago = TIENDA.pago.bizum ? 'con tarjeta o con Bizum' : 'con tarjeta';
 ---
 
@@ -35,7 +34,7 @@ const formasDePago = TIENDA.pago.bizum ? 'con tarjeta o con Bizum' : 'con tarjet
 
   <h2>3. Precios</h2>
   <p>
-    Los precios están en euros y llevan el IVA incluido. El reparto se cobra aparte{envio != null ? ` (${euros(envio)} en Toledo capital)` : ''} y
+    Los precios están en euros y llevan el IVA incluido. El reparto se cobra aparte ({euros(precioZona('poligono') ?? 0)} en el Polígono, {euros(precioZona('toledo') ?? 0)} en el resto de Toledo y {euros(TIENDA.entrega.domicilio.precioKm)} por km en los pueblos a {TIENDA.entrega.domicilio.kmMaximo} km o menos) y
     lo verás sumado antes de pagar. Recoger en la tienda es gratis. El precio que vale es el que aparece al confirmar el pedido.
   </p>
 
@@ -58,8 +57,8 @@ const formasDePago = TIENDA.pago.bizum ? 'con tarjeta o con Bizum' : 'con tarjet
   <ul>
     <li><strong>Recogida en la tienda:</strong> en {direccionCompleta()}, el día que elijas, en el horario de la tienda.</li>
     <li>
-      <strong>Reparto a domicilio:</strong> en Toledo capital, el día que elijas, en el horario de la tienda y sin franjas horarias. Para otros
-      municipios, consulta antes. Más información en <a href={RUTA_REPARTO}>reparto a domicilio</a>.
+      <strong>Reparto a domicilio:</strong> en Toledo capital y en los pueblos a {TIENDA.entrega.domicilio.kmMaximo} km o menos de la tienda, el día que elijas, en el
+      horario de la tienda y sin franjas horarias. Para otros municipios, consulta antes. Más información en <a href={RUTA_REPARTO}>reparto a domicilio</a>.
     </li>
     <li>
       <strong>Hospital Universitario de Toledo:</strong> cada unidad tiene sus normas y algunas no admiten flores ni plantas; compruébalo antes
