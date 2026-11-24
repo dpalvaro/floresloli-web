@@ -12,11 +12,59 @@ export type MetodoEntrega = 'recogida' | 'domicilio' | 'hospital';
 export interface ZonaReparto {
   id: string;
   nombre: string;
+  /** Localidad que se escribe en la dirección del pedido. */
+  localidad: string;
   /** Códigos postales que cubre. */
   cps: string[];
   /** Precio del reparto en euros (IVA incluido). null = se consulta por WhatsApp. */
   precio: number | null;
+  /** Solo pueblos: km por carretera desde la tienda (de ahí sale el precio). */
+  km?: number;
 }
+
+/** Pueblo al que se reparte, con los km por carretera desde la tienda. */
+export interface Pueblo {
+  nombre: string;
+  cp: string;
+  km: number;
+}
+
+/** Euros por km de ida a los pueblos (Loli, 24/11/2026: 1 € por km, sin contar la vuelta). */
+const PRECIO_KM = 1;
+
+/**
+ * Pueblos a 25 km o menos de la tienda (Loli, 24/11/2026: «hasta 25 km»).
+ * km por carretera desde C/ Río Alberche 30 hasta el centro del pueblo, redondeados hacia arriba.
+ * Calculados el 24/11/2026 con OpenStreetMap (OSRM); códigos postales comprobados.
+ * PENDIENTE: que Loli revise la lista (si falta alguno o algún precio no le cuadra).
+ * Para añadir uno: nombre, código postal y km. El precio sale solo.
+ */
+const PUEBLOS: Pueblo[] = [
+  { nombre: 'Burguillos de Toledo', cp: '45112', km: 13 },
+  { nombre: 'Nambroca', cp: '45190', km: 15 },
+  { nombre: 'Bargas', cp: '45593', km: 15 },
+  { nombre: 'Cobisa', cp: '45111', km: 15 },
+  { nombre: 'Mocejón', cp: '45270', km: 16 },
+  { nombre: 'Olías del Rey', cp: '45280', km: 16 },
+  { nombre: 'Argés', cp: '45122', km: 19 },
+  { nombre: 'Layos', cp: '45123', km: 23 },
+  { nombre: 'Villasequilla', cp: '45740', km: 23 },
+  { nombre: 'Chueca', cp: '45113', km: 23 },
+  { nombre: 'Ajofrín', cp: '45110', km: 24 },
+  { nombre: 'Cabañas de la Sagra', cp: '45592', km: 24 },
+  { nombre: 'Villaseca de la Sagra', cp: '45260', km: 24 },
+  { nombre: 'Almonacid de Toledo', cp: '45420', km: 24 },
+  { nombre: 'Magán', cp: '45590', km: 25 },
+];
+
+const zonaDePueblo = (p: Pueblo): ZonaReparto => ({
+  id: `pueblo-${p.cp}`,
+  nombre: p.nombre,
+  localidad: p.nombre,
+  cps: [p.cp],
+  precio: p.km * PRECIO_KM,
+  km: p.km,
+});
 
 export const TIENDA = {
   moneda: 'EUR',
@@ -29,41 +77,53 @@ export const TIENDA = {
     },
     domicilio: {
       nombre: 'Reparto a domicilio',
-      resumen: 'En Toledo, 8 €.',
+      resumen: 'En el Polígono, 5 €; en el resto de Toledo, 8 €; en los pueblos cercanos, 1 € por km.',
       /**
-       * Fuente: ficha («Toledo: 8 €. Pueblos cercanos: según kilómetros»).
-       * PENDIENTE: confirmar qué barrios entran en los 8 € y la tarifa de los pueblos (T15).
-       * Para añadir un pueblo con precio fijo: una zona más con sus códigos postales.
+       * Fuente: Loli, por Álvaro (24/11/2026): Polígono 5 €, resto de Toledo 8 € y pueblos
+       * a 1 € por km de ida, hasta 25 km. La primera zona que coincide es la que vale.
        */
       zonas: [
         {
+          id: 'poligono',
+          nombre: 'el Polígono (Santa María de Benquerencia)',
+          localidad: 'Toledo',
+          cps: ['45007'],
+          precio: 5,
+        },
+        {
           id: 'toledo',
           nombre: 'Toledo capital',
-          cps: ['45001', '45002', '45003', '45004', '45005', '45006', '45007', '45008'],
+          localidad: 'Toledo',
+          cps: ['45001', '45002', '45003', '45004', '45005', '45006', '45008'],
           precio: 8,
         },
+        ...PUEBLOS.map(zonaDePueblo),
       ] as ZonaReparto[],
+      /** Pueblos con su distancia, para la página de reparto. */
+      pueblos: PUEBLOS,
+      precioKm: PRECIO_KM,
+      kmMaximo: 25,
       /** Texto para los códigos postales que no están en ninguna zona con precio. */
       fueraDeZona:
-        'A los pueblos cercanos repartimos según la distancia. Escríbenos por WhatsApp y te decimos el precio.',
+        'Por la web repartimos en Toledo y en los pueblos a 25 km o menos. Para otro sitio, escríbenos por WhatsApp y lo vemos.',
     },
     hospital: {
       nombre: 'Entrega en el Hospital Universitario de Toledo',
       resumen: 'Estamos en el mismo barrio.',
-      // PENDIENTE: confirmar el precio de la entrega en el hospital (puesto como el reparto: 8 €).
-      precio: 8,
+      // Fuente: Loli, por Álvaro (24/11/2026): 5 €, como el Polígono.
+      precio: 5,
     },
   },
 
   /**
-   * Hora límite para pedir para el mismo día (hora de Madrid).
-   * PENDIENTE: confirmar con Loli (la ficha dice «siempre que dé tiempo»).
+   * Hora límite para pedir para el mismo día (hora de Madrid). Después, se llama a la tienda.
+   * Fuente: Loli, por Álvaro (24/11/2026).
    */
   horaLimiteMismoDia: '12:00',
 
   /**
-   * Pedidos de la web que se aceptan por día de entrega.
-   * PENDIENTE: confirmar con el registro de pedidos de dos semanas (T10).
+   * Pedidos de la web que se aceptan por día de entrega. Cuando un día se llena,
+   * los demás siguen abiertos. Fuente: Loli, por Álvaro (24/11/2026): 12 «de momento».
    * Se puede cambiar un día concreto desde el panel (pestaña «Calendario»).
    */
   cupoDiario: 12,
@@ -104,8 +164,9 @@ export const TIENDA = {
   aperturasEspeciales: [] as string[],
 
   /**
-   * IVA incluido en los precios, en %.
-   * Flores y plantas ornamentales: 10 % (ficha). Complementos y envío: PENDIENTE validar con el gestor (T18).
+   * IVA incluido en los precios, en %. Loli da todos los precios con el IVA incluido (24/11/2026).
+   * Este reparto solo sirve para desglosarlo. Flores y plantas ornamentales: 10 % (ficha).
+   * Complementos y envío: PENDIENTE validar con el gestor (T18).
    */
   iva: { flores: 10, complementos: 21, envio: 21 },
 
@@ -154,6 +215,11 @@ export const TIENDA = {
     mesesPresupuestos: 12 as number | null,
   },
 } as const;
+
+/** Precio en euros de una zona por su id ('poligono', 'toledo'…), o null. */
+export function precioZona(id: string): number | null {
+  return TIENDA.entrega.domicilio.zonas.find((z) => z.id === id)?.precio ?? null;
+}
 
 /** Zona de reparto que cubre un código postal, o null. */
 export function zonaDeCp(cp: string): ZonaReparto | null {

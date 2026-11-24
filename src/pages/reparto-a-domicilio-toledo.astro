@@ -5,11 +5,15 @@ import Migas from '../components/Migas.astro';
 import Preguntas from '../components/Preguntas.astro';
 import { euros } from '../../compartido/catalogo.ts';
 import { NEGOCIO, direccionCompleta, enlaceTelefono, enlaceWhatsApp, horarioParaMostrar, SALUDO_WHATSAPP } from '../../compartido/negocio.ts';
-import { TIENDA } from '../../compartido/tienda.ts';
+import { TIENDA, precioZona } from '../../compartido/tienda.ts';
 import { RUTA_HOSPITAL, RUTA_REPARTO, RUTA_TIENDA } from '../lib/rutas.ts';
 import { jsonLdFloristeria, jsonLdMigas, jsonLdPreguntas } from '../lib/seo.ts';
 
-const zonas = TIENDA.entrega.domicilio.zonas;
+const { pueblos, precioKm, kmMaximo } = TIENDA.entrega.domicilio;
+const zonasCiudad = TIENDA.entrega.domicilio.zonas.filter((z) => z.km === undefined);
+const precioPoligono = precioZona('poligono');
+const nombresPueblos = pueblos.map((p) => p.nombre);
+const listaPueblos = `${nombresPueblos.slice(0, -1).join(', ')} y ${nombresPueblos[nombresPueblos.length - 1]}`;
 const horaLimite = TIENDA.horaLimiteMismoDia.replace(/^0/, '');
 const horario = horarioParaMostrar().filter((h) => h.horas[0] !== 'Cerrado');
 const horarioEnTexto = horario.map((h) => `${h.dias.toLowerCase()}, de ${h.horas.join(' y de ').replaceAll(' – ', ' a ')}`).join('; ');
@@ -33,7 +37,7 @@ const preguntas = [
   },
   {
     pregunta: '¿Lleváis flores a los pueblos de alrededor?',
-    respuesta: `Sí, a los pueblos cercanos a Toledo. El precio depende de la distancia: escríbenos por WhatsApp al ${NEGOCIO.movil} o llámanos y te lo decimos.`,
+    respuesta: `Sí, a los que están a ${kmMaximo} km o menos de la tienda: ${listaPueblos}. Cuesta ${euros(precioKm)} por km de ida y lo verás al escribir el código postal. Para otro pueblo, escríbenos por WhatsApp al ${NEGOCIO.movil}.`,
   },
   {
     pregunta: '¿Y si prefiero recogerlo?',
@@ -49,7 +53,7 @@ const migas = [
 
 <Base
   titulo="Reparto de flores a domicilio en Toledo"
-  descripcion={`Llevamos ramos, plantas y centros a domicilio en Toledo por ${euros(zonas[0]?.precio ?? 8)}, y a los pueblos cercanos según la distancia. Hechos a mano en el Polígono. Recogida gratis en la tienda.`}
+  descripcion={`Llevamos ramos, plantas y centros a domicilio en Toledo desde ${euros(precioPoligono ?? 5)}, y a los pueblos cercanos a ${euros(precioKm)} el km. Hechos a mano en el Polígono. Recogida gratis en la tienda.`}
   jsonLd={[jsonLdFloristeria(), jsonLdMigas(migas), jsonLdPreguntas(preguntas)]}
 >
   <div class="envoltura cabeza-pagina">
@@ -79,10 +83,10 @@ const migas = [
               <td data-etiqueta="Precio">Gratis</td>
             </tr>
             {
-              zonas.map((z) => (
+              zonasCiudad.map((z) => (
                 <tr>
                   <th scope="row">
-                    {z.nombre} (códigos postales {z.cps[0]} a {z.cps[z.cps.length - 1]})
+                    {z.id === 'toledo' ? 'Resto de Toledo capital' : `En ${z.nombre}`} (código postal {z.cps.join(', ')})
                   </th>
                   <td data-etiqueta="Precio">{z.precio != null ? euros(z.precio) : 'Pregúntanos'}</td>
                 </tr>
@@ -95,12 +99,41 @@ const migas = [
               <td data-etiqueta="Precio">{euros(TIENDA.entrega.hospital.precio)}</td>
             </tr>
             <tr>
-              <th scope="row">Pueblos cercanos (Layos, Cabañas…)</th>
-              <td data-etiqueta="Precio">Según la distancia: pregúntanos</td>
+              <th scope="row">Pueblos a {kmMaximo} km o menos</th>
+              <td data-etiqueta="Precio">{euros(precioKm)} por km de ida</td>
             </tr>
           </tbody>
         </table>
         <p>Los precios llevan el IVA incluido. Verás el importe del reparto antes de pagar.</p>
+
+        <h2 id="t-pueblos">Reparto a los pueblos</h2>
+        <p>
+          Cobramos {euros(precioKm)} por cada km de carretera desde la tienda hasta el pueblo, solo la ida. Estos son los
+          pueblos a los que llevamos desde la web:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Pueblo</th>
+              <th scope="col">Precio</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              pueblos.map((p) => (
+                <tr>
+                  <th scope="row">
+                    {p.nombre} ({p.cp}, {p.km} km)
+                  </th>
+                  <td data-etiqueta="Precio">{euros(p.km * precioKm)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+        <p>
+          ¿Tu pueblo no está? Escríbenos por <a href={enlaceWhatsApp(`${SALUDO_WHATSAPP}. Es para repartir en un pueblo.`)} rel="noopener">WhatsApp</a> y lo vemos.
+        </p>
 
         <h2>Cuándo repartimos</h2>
         <p>En el horario de la tienda: {horarioEnTexto}.</p>

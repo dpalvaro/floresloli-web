@@ -83,6 +83,42 @@ test('pedido válido: recogida gratis, reparto en Toledo y hospital con su preci
   assert.equal(hospital.ok && hospital.pedido.envio, TIENDA.entrega.hospital.precio * 100);
 });
 
+test('tarifas de reparto del 24/11/2026: Polígono y hospital 5 €, Toledo 8 € y pueblos a 1 € el km', () => {
+  assert.equal(precioEnvioCentimos('domicilio', '45007'), 500);
+  for (const cp of ['45001', '45002', '45003', '45004', '45005', '45006', '45008']) assert.equal(precioEnvioCentimos('domicilio', cp), 800, cp);
+  assert.equal(precioEnvioCentimos('hospital'), 500);
+  assert.equal(precioEnvioCentimos('recogida'), 0);
+  assert.equal(TIENDA.horaLimiteMismoDia, '12:00');
+  assert.equal(TIENDA.cupoDiario, 12);
+
+  const { pueblos, precioKm, kmMaximo } = TIENDA.entrega.domicilio;
+  assert.ok(pueblos.length > 0);
+  for (const p of pueblos) {
+    assert.ok(p.km > 0 && p.km <= kmMaximo, `${p.nombre} está a más de ${kmMaximo} km`);
+    assert.equal(precioEnvioCentimos('domicilio', p.cp), p.km * precioKm * 100, p.nombre);
+  }
+  const cps = TIENDA.entrega.domicilio.zonas.flatMap((z) => z.cps);
+  assert.equal(new Set(cps).size, cps.length, 'un código postal está en dos zonas');
+
+  const pueblo = pueblos[0]!;
+  const v = validarPedido(
+    pedidoBase({ entrega: { metodo: 'domicilio', fecha: '2026-11-11' }, destinatario: { nombre: 'Persona' }, direccion: { calle: 'Calle Mayor 1', cp: pueblo.cp } }),
+    pruebas,
+  );
+  assert.ok(v.ok);
+  assert.equal(v.ok && v.pedido.envio, pueblo.km * precioKm * 100);
+  assert.equal(v.ok && v.pedido.direccion.localidad, pueblo.nombre);
+});
+
+test('el cupo es por día de entrega: un día lleno no cierra los demás', () => {
+  const ahora = { fecha: '2026-11-24', hora: '09:00', diaSemana: 2 };
+  assert.equal(estadoDia('2026-11-25', ahora, undefined, TIENDA.cupoDiario).motivo, 'completo');
+  assert.equal(estadoDia('2026-11-26', ahora, undefined, 0).disponible, true);
+  const tarde = { ...ahora, hora: '12:00' };
+  assert.equal(estadoDia('2026-11-24', tarde, undefined, 0).motivo, 'hora');
+  assert.equal(estadoDia('2026-11-25', tarde, undefined, 0).disponible, true);
+});
+
 test('fuera de la zona de reparto no se puede pagar en la web', () => {
   const v = validarPedido(
     pedidoBase({ entrega: { metodo: 'domicilio', fecha: '2026-11-11' }, destinatario: { nombre: 'Persona' }, direccion: { calle: 'Calle Mayor 1', cp: '45100' } }),

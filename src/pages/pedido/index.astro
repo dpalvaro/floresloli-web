@@ -21,7 +21,7 @@ const datos = {
 };
 const aTexto = (dato: unknown) => JSON.stringify(dato).replace(/</g, '\\u003c');
 
-const zonaToledo = TIENDA.entrega.domicilio.zonas[0];
+const envioDesde = Math.min(...TIENDA.entrega.domicilio.zonas.map((z) => z.precio ?? Infinity));
 const L = TIENDA.limites;
 ---
 
@@ -84,8 +84,8 @@ const L = TIENDA.limites;
                 <label class="opcion">
                   <input type="radio" name="metodo" value="domicilio" />
                   <span class="nombre">{TIENDA.entrega.domicilio.nombre}</span>
-                  <span class="precio">{zonaToledo?.precio != null ? euros(zonaToledo.precio) : ''}</span>
-                  <span class="nota">En Toledo capital. A los pueblos cercanos, según la distancia. <a href={RUTA_REPARTO} target="_blank" rel="noopener">Ver el reparto</a></span>
+                  <span class="precio">{Number.isFinite(envioDesde) ? `Desde ${euros(envioDesde)}` : ''}</span>
+                  <span class="nota">{TIENDA.entrega.domicilio.resumen} <a href={RUTA_REPARTO} target="_blank" rel="noopener">Ver el reparto</a></span>
                 </label>
                 <label class="opcion" data-opcion-hospital>
                   <input type="radio" name="metodo" value="hospital" />

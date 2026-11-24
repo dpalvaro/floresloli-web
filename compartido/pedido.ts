@@ -329,7 +329,7 @@ export function validarPedido(entrada: unknown, catalogo: ProductoCompra[]): Res
       const zona = zonaDeCp(direccion.cp);
       envio = precioEnvioCentimos('domicilio', direccion.cp);
       if (!zona || envio === null) e['direccion.cp'] = TIENDA.entrega.domicilio.fueraDeZona;
-      else if (!direccion.localidad) direccion.localidad = zona.id === 'toledo' ? 'Toledo' : zona.nombre;
+      else if (!direccion.localidad) direccion.localidad = zona.localidad;
     }
     hospitalDetalle = '';
   } else if (metodo === 'hospital') {

@@ -30,7 +30,6 @@ const fotoMedida = foto('centro-lilium')!;
 const fotoHospital = foto('ramo-hospital')!;
 const fotoFachada = foto('fachada')!;
 const cartel = await getImage({ src: foto('taller-poster')!, width: 432, format: 'webp', quality: 70 });
-const envioToledo = TIENDA.entrega.domicilio.zonas[0]?.precio;
 ---
 
 <Base
@@ -210,7 +209,7 @@ const envioToledo = TIENDA.entrega.domicilio.zonas[0]?.precio;
           <div>
             <h3>A domicilio en Toledo</h3>
             <p>
-              {envioToledo != null ? `${euros(envioToledo)}. ` : ''}A los pueblos cercanos, según la distancia. <a href={RUTA_REPARTO}>Ver el reparto</a>
+              {TIENDA.entrega.domicilio.resumen} <a href={RUTA_REPARTO}>Ver el reparto</a>
             </p>
           </div>
         </li>
